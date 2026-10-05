@@ -1228,7 +1228,7 @@ async function loadVoiceManifest() {
     if (!m || !m.lines) return;
     CLIPS.manifest = m;
     voiceBtns[0].hidden = false;
-    if (savedVoice == null || savedVoice === 'real') setVoice('real', false);
+    if (savedVoice !== 'robot') setVoice('real', false);
   } catch (e) {}
 }
 function clipBuffer(file) {

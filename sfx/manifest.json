@@ -1,0 +1,67 @@
+{
+ "bell": [
+  "bell_01.mp3"
+ ],
+ "birds": [
+  "birds_01.mp3"
+ ],
+ "body": [
+  "body_01.mp3",
+  "body_02.mp3",
+  "body_03.mp3"
+ ],
+ "calm": [
+  "calm_01.mp3"
+ ],
+ "charge": [
+  "charge_01.mp3"
+ ],
+ "chicken": [
+  "chicken_01.mp3",
+  "chicken_02.mp3"
+ ],
+ "fish": [
+  "fish_01.mp3",
+  "fish_02.mp3"
+ ],
+ "gold": [
+  "gold_01.mp3"
+ ],
+ "hairflap": [
+  "hairflap_01.mp3"
+ ],
+ "haymaker": [
+  "haymaker_01.mp3",
+  "haymaker_02.mp3"
+ ],
+ "hook": [
+  "hook_01.mp3",
+  "hook_02.mp3",
+  "hook_03.mp3"
+ ],
+ "jab": [
+  "jab_01.mp3",
+  "jab_02.mp3",
+  "jab_03.mp3",
+  "jab_04.mp3"
+ ],
+ "miss": [
+  "miss_01.mp3"
+ ],
+ "tooth": [
+  "tooth_01.mp3"
+ ],
+ "upper": [
+  "upper_01.mp3",
+  "upper_02.mp3"
+ ],
+ "whoosh": [
+  "whoosh_01.mp3",
+  "whoosh_02.mp3",
+  "whoosh_03.mp3"
+ ],
+ "wobble": [
+  "wobble_01.mp3",
+  "wobble_02.mp3"
+ ]
+}

@@ -26,7 +26,7 @@ Host the folder anywhere with HTTPS (GitHub Pages works). On a phone, open it an
 - **Weapons you unlock by playing**: boxing glove, golden glove (150 lifetime thumps), rubber chicken (400), wet fish (800), each with its own sound
 - **One hint at a time**: the next move you haven't tried yet. Hints stop once you've tried them all.
 - **End screen**: stats, personal bests, unlock progress, an all-caps post he writes about you, and a portrait share card (1080×1350)
-- **Recorded voice, ready to drop in**: see `voice/README.md` and `tools/make-voice.mjs` (ElevenLabs)
+- **Recorded voice and sound effects**: 67 lines and 10 grunts in the ElevenLabs voice "Thumper" (`voice/`), plus 31 effect samples (`sfx/`), picked from three takes each. Synth sounds stay as a fallback. Regenerate with `tools/make-voice.mjs`.
 - Separate music and sound toggles; audio pauses when the app goes to the background
 
 Satire. He's a cartoon. Nobody real gets hurt.

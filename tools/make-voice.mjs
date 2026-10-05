@@ -33,6 +33,8 @@ if (!KEY || !VOICE) { console.error('Set ELEVENLABS_API_KEY and ELEVENLABS_VOICE
 const outDir = path.join(root, 'voice');
 await fs.mkdir(outDir, { recursive: true });
 const manifest = { model: MODEL, generated: new Date().toISOString(), lines: {} };
+// keep kinds that aren't spoken lines (e.g. grunts) from an existing manifest
+try { const old = JSON.parse(await fs.readFile(path.join(outDir, 'manifest.json'), 'utf8')); for (const [k, v] of Object.entries(old.lines || {})) if (!LINES[k]) manifest.lines[k] = v; } catch {}
 
 for (const l of all) {
   (manifest.lines[l.kind] ||= []).push({ text: l.text, file: l.file });

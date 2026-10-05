@@ -1,0 +1,344 @@
+{
+ "model": "eleven_v3",
+ "voice": "Thumper",
+ "lines": {
+  "body": [
+   {
+    "text": "Oof! Not the tie!",
+    "file": "body_01.mp3"
+   },
+   {
+    "text": "Ugh! Watch the suit! Very expensive suit!",
+    "file": "body_02.mp3"
+   },
+   {
+    "text": "Below the belt! Very below the belt!",
+    "file": "body_03.mp3"
+   },
+   {
+    "text": "My lunch! That was eleven cheeseburgers!",
+    "file": "body_04.mp3"
+   }
+  ],
+  "charge": [
+   {
+    "text": "Whoa, whoa. Let's make a deal.",
+    "file": "charge_01.mp3"
+   },
+   {
+    "text": "Hold on. Hold on. Very bad idea.",
+    "file": "charge_02.mp3"
+   },
+   {
+    "text": "We can talk about this, believe me.",
+    "file": "charge_03.mp3"
+   },
+   {
+    "text": "Okay, okay. Fifty percent of my golf course.",
+    "file": "charge_04.mp3"
+   }
+  ],
+  "combo": [
+   {
+    "text": "Stop! STOP! Okay, fifty percent stop!",
+    "file": "combo_01.mp3"
+   },
+   {
+    "text": "Time out! I'm calling a time out!",
+    "file": "combo_02.mp3"
+   },
+   {
+    "text": "Security! SECURITY!",
+    "file": "combo_03.mp3"
+   }
+  ],
+  "daze": [
+   {
+    "text": "Mommy?",
+    "file": "daze_01.mp3"
+   },
+   {
+    "text": "I see... eagles...",
+    "file": "daze_02.mp3"
+   },
+   {
+    "text": "Who's the president? Is it me?",
+    "file": "daze_03.mp3"
+   },
+   {
+    "text": "Four more... birds...",
+    "file": "daze_04.mp3"
+   },
+   {
+    "text": "Covfefe...",
+    "file": "daze_05.mp3"
+   }
+  ],
+  "grunt": [
+   {
+    "text": "",
+    "file": "grunt_01.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_02.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_03.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_04.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_05.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_06.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_07.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_08.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_09.mp3"
+   },
+   {
+    "text": "",
+    "file": "grunt_10.mp3"
+   }
+  ],
+  "hair": [
+   {
+    "text": "NOT THE HAIR!",
+    "file": "hair_01.mp3"
+   },
+   {
+    "text": "Put it back! PUT IT BACK!",
+    "file": "hair_02.mp3"
+   },
+   {
+    "text": "Nobody saw that. NOBODY!",
+    "file": "hair_03.mp3"
+   },
+   {
+    "text": "That's very expensive hair. The best hair.",
+    "file": "hair_04.mp3"
+   },
+   {
+    "text": "It's all real! Every strand!",
+    "file": "hair_05.mp3"
+   }
+  ],
+  "hit": [
+   {
+    "text": "Ow! Fake punch!",
+    "file": "hit_01.mp3"
+   },
+   {
+    "text": "WRONG!",
+    "file": "hit_02.mp3"
+   },
+   {
+    "text": "Not the face!",
+    "file": "hit_03.mp3"
+   },
+   {
+    "text": "RIGGED!",
+    "file": "hit_04.mp3"
+   },
+   {
+    "text": "Very unfair!",
+    "file": "hit_05.mp3"
+   },
+   {
+    "text": "That one didn't count!",
+    "file": "hit_06.mp3"
+   },
+   {
+    "text": "Witch hunt!",
+    "file": "hit_07.mp3"
+   },
+   {
+    "text": "I barely felt it.",
+    "file": "hit_08.mp3"
+   },
+   {
+    "text": "Ooh. Tremendous.",
+    "file": "hit_09.mp3"
+   },
+   {
+    "text": "Okay, that one hurt.",
+    "file": "hit_10.mp3"
+   },
+   {
+    "text": "Lawyers! Where are my lawyers?",
+    "file": "hit_11.mp3"
+   },
+   {
+    "text": "I'll sue! Big lawsuit!",
+    "file": "hit_12.mp3"
+   },
+   {
+    "text": "Very unpresidential!",
+    "file": "hit_13.mp3"
+   },
+   {
+    "text": "Ow ow ow. SAD!",
+    "file": "hit_14.mp3"
+   },
+   {
+    "text": "Total hoax!",
+    "file": "hit_15.mp3"
+   },
+   {
+    "text": "My beautiful face!",
+    "file": "hit_16.mp3"
+   },
+   {
+    "text": "Excuse me! EXCUSE me!",
+    "file": "hit_17.mp3"
+   },
+   {
+    "text": "Disgraceful!",
+    "file": "hit_18.mp3"
+   },
+   {
+    "text": "Who taught you to punch? Terrible teacher.",
+    "file": "hit_19.mp3"
+   }
+  ],
+  "ko": [
+   {
+    "text": "...SAD.",
+    "file": "ko_01.mp3"
+   }
+  ],
+  "miss": [
+   {
+    "text": "Missed! HA! Total miss!",
+    "file": "miss_01.mp3"
+   },
+   {
+    "text": "Over here, loser!",
+    "file": "miss_02.mp3"
+   },
+   {
+    "text": "Can't even hit a face. Sad!",
+    "file": "miss_03.mp3"
+   }
+  ],
+  "quit": [
+   {
+    "text": "Leaving already? Quitter! Low energy!",
+    "file": "quit_01.mp3"
+   }
+  ],
+  "recover": [
+   {
+    "text": "I'm fine. Never been better. Perfect face.",
+    "file": "recover_01.mp3"
+   },
+   {
+    "text": "That was a perfect recovery. Perfect.",
+    "file": "recover_02.mp3"
+   },
+   {
+    "text": "I meant to do that. Tremendous strategy.",
+    "file": "recover_03.mp3"
+   }
+  ],
+  "taunt": [
+   {
+    "text": "Nobody has ever punched me. Nobody. Many people are saying it.",
+    "file": "taunt_01.mp3"
+   },
+   {
+    "text": "Go ahead. My face is the most beautiful face. Everybody says so.",
+    "file": "taunt_02.mp3"
+   },
+   {
+    "text": "That's a very weak finger you have there. Very weak.",
+    "file": "taunt_03.mp3"
+   },
+   {
+    "text": "I have the best chin. Tremendous chin. A total fortress.",
+    "file": "taunt_04.mp3"
+   },
+   {
+    "text": "You call that stress? I invented stress. Nobody knew stress before me.",
+    "file": "taunt_05.mp3"
+   },
+   {
+    "text": "I'm waiting. I'm a very patient person. The most patient, frankly.",
+    "file": "taunt_06.mp3"
+   },
+   {
+    "text": "Low energy! Is this thing even on?",
+    "file": "taunt_07.mp3"
+   },
+   {
+    "text": "Believe me, you'll get tired of punching. So tired.",
+    "file": "taunt_08.mp3"
+   },
+   {
+    "text": "This app is a disaster. Worst app in the history of apps, maybe ever.",
+    "file": "taunt_09.mp3"
+   },
+   {
+    "text": "Frankly, I'm the victim here. The biggest victim. Bigger than anyone.",
+    "file": "taunt_10.mp3"
+   },
+   {
+    "text": "Strong men, big strong men, come up to me with tears in their eyes and they say, sir...",
+    "file": "taunt_11.mp3"
+   },
+   {
+    "text": "I know more about punching than the generals. Believe me.",
+    "file": "taunt_12.mp3"
+   },
+   {
+    "text": "Very nice phone. Cheap, but nice. Looks fake.",
+    "file": "taunt_13.mp3"
+   }
+  ],
+  "tooth": [
+   {
+    "text": "My tooth! That was a gold tooth!",
+    "file": "tooth_01.mp3"
+   }
+  ],
+  "upper": [
+   {
+    "text": "My chin! My tremendous chin!",
+    "file": "upper_01.mp3"
+   },
+   {
+    "text": "Ugh! Very low blow. From below!",
+    "file": "upper_02.mp3"
+   },
+   {
+    "text": "Whoa! My teeth!",
+    "file": "upper_03.mp3"
+   }
+  ],
+  "welcome": [
+   {
+    "text": "Oh look. Another one. Very angry. Very angry person.",
+    "file": "welcome_01.mp3"
+   },
+   {
+    "text": "Here we go. Another hater. Lots of haters.",
+    "file": "welcome_02.mp3"
+   }
+  ]
+ }
+}
