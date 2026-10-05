@@ -1048,6 +1048,60 @@ const SFX = {
 };
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
+/* Recorded sound effects: if sfx/manifest.json exists, its samples replace the
+   synth sounds key by key. Anything without a sample keeps the synth version. */
+const SAMPLES = { map: null, buf: new Map(), pre: false, birdsUntil: 0, charge: null };
+async function loadSfxManifest() {
+  try { const r = await fetch('sfx/manifest.json', { cache: 'no-cache' }); if (r.ok) SAMPLES.map = await r.json(); } catch (e) {}
+  if (AU.ctx) preloadSamples();
+}
+function preloadSamples() {
+  if (!SAMPLES.map || SAMPLES.pre || !AU.ctx) return; SAMPLES.pre = true;
+  const c = AU.ctx;
+  for (const f of Object.values(SAMPLES.map).flat()) {
+    fetch('sfx/' + f).then(r => r.arrayBuffer()).then(a => new Promise((res, rej) => c.decodeAudioData(a, res, rej))).then(b => SAMPLES.buf.set(f, b)).catch(() => {});
+  }
+}
+function playSample(key, vol = 1, vary = true) {
+  const c = AU.ctx; if (!c || !SAMPLES.map || !SAMPLES.map[key]) return null;
+  const ready = SAMPLES.map[key].filter(f => SAMPLES.buf.has(f));
+  if (!ready.length) return null;
+  const src = c.createBufferSource(); src.buffer = SAMPLES.buf.get(pick(ready));
+  if (vary) src.playbackRate.value = rand(0.95, 1.06);
+  const g = c.createGain(); g.gain.value = vol;
+  src.connect(g); g.connect(AU.sfx); src.start();
+  return src;
+}
+const SAMPLE_KEY = {
+  thump: (p, kind) => ({ hook: 'hook', chop: 'hook', upper: 'upper', hay: 'haymaker', body: 'body' })[kind] || 'jab',
+  whoosh: () => 'whoosh', miss: () => 'miss', bell: () => 'bell', flap: () => 'hairflap', tink: () => 'tooth',
+  squeak: () => 'chicken', splat: () => 'fish', ting: () => 'gold', calm: () => 'calm'
+};
+for (const [name, keyFn] of Object.entries(SAMPLE_KEY)) {
+  const synth = SFX[name];
+  SFX[name] = (...a) => {
+    const p = name === 'thump' ? a[0] : 1;
+    if (playSample(keyFn(...a), name === 'thump' ? 0.55 + 0.5 * p : name === 'whoosh' ? 0.4 + 0.5 * p : 1, name !== 'bell' && name !== 'calm')) {
+      if (name === 'thump' && p > 0.45) setTimeout(() => playSample('wobble', 0.6 * p), 40);
+      return;
+    }
+    synth.apply(SFX, a);
+  };
+}
+{
+  const tweet = SFX.tweet, cStart = SFX.chargeStart, cStop = SFX.chargeStop;
+  SFX.tweet = () => {
+    if (SAMPLES.map && SAMPLES.map.birds) {
+      if (performance.now() < SAMPLES.birdsUntil) return;
+      const s = playSample('birds', 0.7, false);
+      if (s) { SAMPLES.birdsUntil = performance.now() + s.buffer.duration * 1000; return; }
+    }
+    tweet();
+  };
+  SFX.chargeStart = () => { const s = playSample('charge', 0.8, false); if (s) { SAMPLES.charge = s; return; } cStart(); };
+  SFX.chargeStop = () => { if (SAMPLES.charge) { try { SAMPLES.charge.stop(); } catch (e) {} SAMPLES.charge = null; return; } cStop(); };
+}
+
 /* ---------------------------------------------------------------- music
    One loop, two moods. High blood pressure = fast, bright, driven stabs.
    As you calm down it slides into a slow, muffled lo-fi groove.          */
@@ -1212,6 +1266,19 @@ function speakClip(kind) {
     musicLevel(0.13, 0.1);
   });
   return true;
+}
+
+let lastGrunt = 0;
+function grunt(p) {
+  if (voiceMode !== 'real' || !CLIPS.manifest || !CLIPS.manifest.lines.grunt || !AU.ctx) return;
+  if (speech && !speech.done && !speech.cutShown && now() < speech.end) return;
+  const t = performance.now(); if (t - lastGrunt < 280 || Math.random() > 0.75) return;
+  const list = CLIPS.manifest.lines.grunt;
+  const big = p > 0.8 ? list.filter(g => /_(09|10)\./.test(g.file)) : list.filter(g => !/_(09|10)\./.test(g.file));
+  const b = CLIPS.buf.get(pick(big.length ? big : list).file); if (!b) return;
+  lastGrunt = t;
+  const src = AU.ctx.createBufferSource(); src.buffer = b; src.playbackRate.value = rand(0.97, 1.04);
+  const g = AU.ctx.createGain(); g.gain.value = 0.3; src.connect(g); g.connect(AU.voiceOut); src.start();
 }
 
 function speak(kind, force) {
@@ -1385,7 +1452,7 @@ function applyBody(g) {
   tie.va += -g.dir[0] * p * 3.4 + rand(-1, 1) * p;
   hair.va += p * 1.4;
   burstAt(g.tx, g.ty, p * 0.8, 'body');
-  SFX.thump(p * 0.85, 'body'); weaponSfx();
+  SFX.thump(p * 0.85, 'body'); weaponSfx(); grunt(p);
   G.shake = Math.min(1, G.shake + p * 0.35);
   try { if (navigator.vibrate) navigator.vibrate(Math.round(10 + p * 25)); } catch (e) {}
   face.wince = 0.3; face.ouch = 0.9; face.raise = 1;
@@ -1459,7 +1526,7 @@ function applyHit(g) {
   const [sx, sy] = [g.tx, g.ty];
   burstAt(sx, sy, p, kind);
   if (tooth) { addPart({ t: 'tooth', x: sx, y: sy, vx: rand(-200, 200) * S, vy: -720 * S, life: 1.6, age: 0, r: 9 * S, rot: 0, vr: 18 }); SFX.tink(); }
-  SFX.thump(weapon === 'chicken' ? p * 0.55 : p, kind); weaponSfx();
+  SFX.thump(weapon === 'chicken' ? p * 0.55 : p, kind); weaponSfx(); grunt(p);
   G.shake = Math.min(1, G.shake + p * 0.55);
   if (p > 0.6 && !RM) G.hitStop = 0.035 + 0.07 * (p - 0.6) / 0.4;
   try { if (navigator.vibrate) navigator.vibrate(Math.round(12 + p * 40)); } catch (e) {}
@@ -1857,7 +1924,7 @@ $('goBtn').addEventListener('click', startGame);
 function startGame() {
   au();
   Object.assign(G, { mode: 'play', stress: mood, startStress: mood, shown: mood, hits: 0, big: 0, hairLifts: 0, cuts: 0, dazes: 0, teeth: 0, t0: performance.now() / 1000, combo: 0, bestCombo: 0, ko: false, dazed: 0, daze: 0, wiped: 0 });
-  startEl.hidden = true; hud.hidden = false; refreshHint(); preloadClips();
+  startEl.hidden = true; hud.hidden = false; refreshHint(); preloadClips(); preloadSamples();
   MUS.s = mood;
   SFX.bell(3);
   setTimeout(musicStart, 900);
@@ -2013,6 +2080,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 loadVoiceManifest();
+loadSfxManifest();
+cv.addEventListener('pointerdown', () => { preloadSamples(); preloadClips(); }, { once: true });
 if ('serviceWorker' in navigator && location.protocol === 'https:' && document.querySelector('link[rel="manifest"]')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
