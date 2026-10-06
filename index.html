@@ -34,6 +34,7 @@
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
+html{touch-action:manipulation}
 html,body{height:100%;margin:0;background:var(--night);color:var(--cream);overflow:hidden;font-family:var(--body);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 [hidden]{display:none!important}
 #app{position:fixed;inset:0;overflow:hidden;background:var(--night)}
@@ -157,6 +158,9 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .pen-body .go{height:56px;font-size:18px}
 @keyframes slam{0%{transform:scale(1.6) rotate(-8deg);opacity:0}60%{transform:scale(.96) rotate(-1deg);opacity:1}100%{transform:scale(1) rotate(-2deg)}}
 @media (prefers-reduced-motion:reduce){.pen-in,#pass{animation:none}}
+.sheet{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box}
+@media (orientation:landscape) and (max-height:520px){.sheet{padding-top:16px}.logo .l2{font-size:56px}.eyebrow{display:none}}
+@media (max-width:360px){#bpVal,#turnVal{font-size:21px}.icon-btn{width:34px;height:34px}#musicBtn{display:none}.done-btn{height:34px;padding:0 9px}.hud-r{gap:6px}.count{min-width:0}.bp .unit{display:none}}
 @media (max-height:760px){.tag{display:none}.sheet{padding-top:40px}.sheet-in{gap:11px}}
 @media (max-width:380px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){.end-in{animation:none}#bubble.cut{animation-duration:.2s}}
@@ -987,10 +991,13 @@ function au() {
     const sh = c.createWaveShaper(); const curve = new Float32Array(1024);
     for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 3.2); }
     sh.curve = curve; AU.drive = sh;
+    // stabs share one distortion + filter chain, wired once (per-note wiring leaked nodes)
+    AU.stabLP = c.createBiquadFilter(); AU.stabLP.type = 'lowpass'; AU.stabLP.frequency.value = 2400;
+    sh.connect(AU.stabLP); AU.stabLP.connect(AU.musicLP);
     // iOS unlock
     const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0);
   }
-  if (AU.ctx.state === 'suspended') AU.ctx.resume();
+  if (AU.ctx.state !== 'running' && !document.hidden) AU.ctx.resume().catch(() => {});
   return AU.ctx;
 }
 const now = () => AU.ctx ? AU.ctx.currentTime : performance.now() / 1000;
@@ -1105,10 +1112,11 @@ async function loadSfxManifest() {
 }
 function preloadSamples() {
   if (!SAMPLES.map || SAMPLES.pre || !AU.ctx) return; SAMPLES.pre = true;
-  const c = AU.ctx;
-  for (const f of Object.values(SAMPLES.map).flat()) {
-    fetch('sfx/' + f).then(r => r.arrayBuffer()).then(a => new Promise((res, rej) => c.decodeAudioData(a, res, rej))).then(b => SAMPLES.buf.set(f, b)).catch(() => {});
-  }
+  const c = AU.ctx, queue = Object.values(SAMPLES.map).flat();
+  // a few at a time, so low-end phones don't spike memory decoding everything at once
+  const worker = async () => { while (queue.length) { const f = queue.shift();
+    try { const a = await (await fetch('sfx/' + f)).arrayBuffer(); SAMPLES.buf.set(f, await new Promise((res, rej) => c.decodeAudioData(a, res, rej))); } catch (e) {} } };
+  for (let i = 0; i < 4; i++) worker();
 }
 function playSample(key, vol = 1, vary = true) {
   const c = AU.ctx; if (!c || !SAMPLES.map || !SAMPLES.map[key]) return null;
@@ -1128,7 +1136,7 @@ const SAMPLE_KEY = {
 for (const [name, keyFn] of Object.entries(SAMPLE_KEY)) {
   const synth = SFX[name];
   SFX[name] = (...a) => {
-    const p = name === 'thump' ? a[0] : 1;
+    const p = (name === 'thump' || name === 'whoosh') && typeof a[0] === 'number' ? a[0] : 1;
     if (playSample(keyFn(...a), name === 'thump' ? 0.55 + 0.5 * p : name === 'whoosh' ? 0.4 + 0.5 * p : 1, name !== 'bell' && name !== 'calm')) {
       if (name === 'thump' && p > 0.45) setTimeout(() => playSample('wobble', 0.6 * p), 40);
       return;
@@ -1146,8 +1154,8 @@ for (const [name, keyFn] of Object.entries(SAMPLE_KEY)) {
     }
     tweet();
   };
-  SFX.chargeStart = () => { const s = playSample('charge', 0.8, false); if (s) { SAMPLES.charge = s; return; } cStart(); };
-  SFX.chargeStop = () => { if (SAMPLES.charge) { try { SAMPLES.charge.stop(); } catch (e) {} SAMPLES.charge = null; return; } cStop(); };
+  SFX.chargeStart = () => { SFX.chargeStop(); const s = playSample('charge', 0.8, false); if (s) { SAMPLES.charge = s; return; } cStart(); };
+  SFX.chargeStop = () => { if (SAMPLES.charge) { try { SAMPLES.charge.stop(); } catch (e) {} SAMPLES.charge = null; } cStop(); };
 }
 
 /* ---------------------------------------------------------------- music
@@ -1171,7 +1179,10 @@ function musicTick() {
   const c = AU.ctx; if (!c) return;
   const s = MUS.s;
   AU.musicLP.frequency.setTargetAtTime(700 + 7500 * Math.pow(s, 1.4), c.currentTime, 0.4);
+  MUS.next = Math.max(MUS.next, c.currentTime + 0.02);
+  const silentMusic = !musicOn || AU.muted;
   while (MUS.next < c.currentTime + 0.12) {
+    if (silentMusic) { MUS.next += 60 / (74 + 58 * s) / 4; MUS.step = (MUS.step + 1) % 64; continue; }
     const bpm = 74 + 58 * s, sd = 60 / bpm / 4;
     const k = MUS.step % 16;
     const swing = (k % 2) ? sd * 0.16 * (1 - s) : 0;
@@ -1216,9 +1227,7 @@ function musicStep(step, t, s, sd) {
     [ch[0], ch[0] + 7, ch[0] + 12].forEach(n => {
       const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(n + 12); o.detune.value = rand(-12, 12);
       const g = c.createGain(); env(g, t, 0.004, v, sd * 1.4);
-      o.connect(AU.drive); AU.drive.connect(g);
-      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2400;
-      g.connect(f); f.connect(out); o.start(t); o.stop(t + sd * 2);
+      o.connect(g); g.connect(AU.drive); o.start(t); o.stop(t + sd * 2);
     });
   }
 }
@@ -1289,6 +1298,7 @@ async function loadVoiceManifest() {
     if (!m || !m.lines) return;
     CLIPS.manifest = m;
     voiceBtns[0].hidden = false;
+    if (AU.ctx) preloadClips();
     if (savedVoice !== 'robot') setVoice('real', false);
   } catch (e) {}
 }
@@ -1297,13 +1307,16 @@ function clipBuffer(file) {
   if (CLIPS.loading.has(file)) return CLIPS.loading.get(file);
   const c = au(); if (!c) return Promise.resolve(null);
   const pr = fetch('voice/' + file).then(r => r.arrayBuffer()).then(a => new Promise((res, rej) => c.decodeAudioData(a, res, rej)))
-    .then(b => { CLIPS.buf.set(file, b); return b; }).catch(() => null);
+    .then(b => { CLIPS.buf.set(file, b); return b; }).catch(() => { CLIPS.loading.delete(file); return null; });
   CLIPS.loading.set(file, pr); return pr;
 }
 function preloadClips() {
   if (!CLIPS.manifest || CLIPS.pre) return; CLIPS.pre = true;
-  const files = Object.values(CLIPS.manifest.lines).flat().map(l => l.file);
-  (async () => { for (const f of files) await clipBuffer(f); })();
+  const L = CLIPS.manifest.lines;
+  // grunts first (they play on almost every hit), then 3 loaders in parallel
+  const queue = [...(L.grunt || []), ...Object.entries(L).filter(([k]) => k !== 'grunt').flatMap(([, v]) => v)].map(l => l.file);
+  const worker = async () => { while (queue.length) await clipBuffer(queue.shift()); };
+  for (let i = 0; i < 3; i++) worker();
 }
 /* Lines come out of a shuffled bag per category, so nothing repeats until
    the whole set has played, and never twice in a row across refills. */
@@ -1337,7 +1350,7 @@ function speakClip(kind, opts = {}) {
   bubbleEl.classList.remove('cut'); bubbleText.textContent = ''; bubbleEl.hidden = false;
   clipBuffer(entry.file).then(b => {
     if (speech !== sp || sp.done) return;
-    const c = AU.ctx; if (!b || !c) { sp.done = true; bubbleEl.hidden = true; return; }
+    const c = AU.ctx; if (!b || !c) { sp.done = true; speak(kind, true, { text: entry.text, silent: true }); return; }
     const src = c.createBufferSource(); src.buffer = b;
     const bus = c.createGain(); bus.gain.value = 0.32;
     const an = c.createAnalyser(); an.fftSize = 512;
@@ -1357,7 +1370,8 @@ function grunt(p) {
   const t = performance.now(); if (t - lastGrunt < 280 || Math.random() > 0.75) return;
   const list = CLIPS.manifest.lines.grunt;
   const big = p > 0.8 ? list.filter(g => /_(09|10)\./.test(g.file)) : list.filter(g => !/_(09|10)\./.test(g.file));
-  const b = CLIPS.buf.get(pick(big.length ? big : list).file); if (!b) return;
+  const choice = pick(big.length ? big : list).file;
+  const b = CLIPS.buf.get(choice); if (!b) { clipBuffer(choice); return; }
   lastGrunt = t;
   // a flurry pushes him higher and louder, like he's coming apart
   const build = Math.max(0, G.combo - 2);
@@ -1366,8 +1380,9 @@ function grunt(p) {
 }
 
 function speak(kind, force, opts = {}) {
+  if (G.mode === 'end') return;   // late reactions from the last punch
   if (speech && !speech.done && !force) return;
-  if (voiceMode === 'real' && CLIPS.manifest && speakClip(kind, opts)) return;
+  if (!opts.silent && voiceMode === 'real' && CLIPS.manifest && speakClip(kind, opts)) return;
   const line = opts.text || bagPick('txt:' + kind + ':' + (opts.tier || ''), LINES[kind].filter(t => lineOk(kind, t, opts))) || pick(LINES[kind]);
   // recorded voice is on but this line isn't voiced yet: show it as a caption
   // rather than switching to the synth mumble mid-conversation
@@ -1391,7 +1406,7 @@ function speak(kind, force, opts = {}) {
   });
   speech = { line, plan, t0, end: t, done: false, robot: false, bus: null, shown: 0, silent };
   const c = AU.ctx;
-  if (!silent && voiceMode === 'robot' && 'speechSynthesis' in window) {
+  if (!silent && !AU.muted && voiceMode === 'robot' && 'speechSynthesis' in window) {
     speech.robot = true;
     try {
       const u = new SpeechSynthesisUtterance(line.replace(/\.\.\./g, ', '));
@@ -1404,7 +1419,7 @@ function speak(kind, force, opts = {}) {
     } catch (e) { speech.robot = false; }
   }
   if (!silent && !speech.robot && c) {
-    const bus = c.createGain(); bus.gain.value = 1; bus.connect(AU.voiceOut); speech.bus = bus;
+    const bus = c.createGain(); bus.gain.value = 1; bus.connect(AU.voiceOut); speech.bus = bus; speech.oscs = [];
     for (const s of plan) {
       const o = c.createOscillator(); o.type = 'sawtooth';
       o.frequency.setValueAtTime(s.f * 1.1, s.t); o.frequency.linearRampToValueAtTime(s.f * 0.88, s.t + s.dur);
@@ -1416,7 +1431,7 @@ function speak(kind, force, opts = {}) {
         const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
         const ga = c.createGain(); ga.gain.value = a; g.connect(bp); bp.connect(ga); ga.connect(bus);
       });
-      o.start(s.t); o.stop(s.t + s.dur + 0.02);
+      o.start(s.t); o.stop(s.t + s.dur + 0.02); speech.oscs.push(o);
       if (Math.random() < 0.5) nz(c, s.t, 0.018, 0.12 * s.amp, bus, 'highpass', 3500, 0.7, 0.001);
     }
   }
@@ -1426,7 +1441,7 @@ function speak(kind, force, opts = {}) {
 
 function stopSpeech(cut) {
   if (!speech || speech.done) return false;
-  const was = now() < speech.end - 0.06;
+  const was = !speech.pending && now() < speech.end - 0.06;
   speech.done = true;
   if (speech.robot) { try { speechSynthesis.cancel(); } catch (e) {} }
   if (speech.bus && AU.ctx) { const t = AU.ctx.currentTime; speech.bus.gain.cancelScheduledValues(t); speech.bus.gain.setTargetAtTime(0, t, 0.008); }
@@ -1436,7 +1451,11 @@ function stopSpeech(cut) {
     speech.hideAt = performance.now() / 1000 + 0.6;
     speech.cutShown = true;
   }
-  if (speech.src) { try { speech.src.stop(); } catch (e) {} }
+  if (AU.ctx) {
+    const t = AU.ctx.currentTime + 0.04;
+    if (speech.src) { try { speech.src.stop(t); } catch (e) {} }
+    if (speech.oscs) for (const o of speech.oscs) { try { o.stop(t); } catch (e) {} }
+  }
   musicLevel(0.22, 0.3);
   return cut && was;
 }
@@ -1646,7 +1665,10 @@ function queueResume() {
 /* ------------------------------------------------------------------ input */
 const ptrs = new Map();
 let lastPtr = null;
-function turnLocked() { return G.mode === 'play' && G.drink && (!penaltyEl.hidden || performance.now() < G.turnLock); }
+function turnLocked() {
+  if (G.mode !== 'play' && G.mode !== 'title') return true;
+  return G.mode === 'play' && G.drink && (!penaltyEl.hidden || performance.now() < G.turnLock || ptrs.size > 0);
+}
 cv.addEventListener('pointerdown', e => {
   au();
   if (G.mode === 'end' || turnLocked()) return;
@@ -1665,7 +1687,7 @@ function endPtr(e, cancel) {
   const p = ptrs.get(e.pointerId); if (!p) return;
   ptrs.delete(e.pointerId);
   if (p.charging) { SFX.chargeStop(); }
-  if (cancel || G.mode === 'end') return;
+  if (cancel || (G.mode !== 'play' && G.mode !== 'title') || (G.mode === 'play' && G.drink && G.turnLock > performance.now())) return;
   const dx = p.x - p.x0, dy = p.y - p.y0, dist = Math.hypot(dx, dy), dt = Math.max(16, performance.now() - p.t0);
   if (p.charging) {
     const [hx, hy] = toScreen(0, 20);
@@ -1693,11 +1715,11 @@ function endPtr(e, cancel) {
   }
   throwPunch(kind, p.x0, p.y0, tx, ty, power, [ux, uy]);
 }
-cv.addEventListener('pointerup', e => endPtr(e, false));
+cv.addEventListener('pointerup', e => { au(); endPtr(e, false); });
 cv.addEventListener('pointercancel', e => endPtr(e, true));
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => {
-  if (G.mode === 'end' || e.repeat || turnLocked()) return;
+  if (e.repeat || turnLocked() || (e.target && e.target.closest && e.target.closest('button,input,a,textarea'))) return;
   const [fx, fy] = toScreen(rand(-80, 80), rand(-120, 140));
   if (e.code === 'Space') { au(); throwPunch('jab', fx, fy, fx, fy, 0.35, [0, -1]); e.preventDefault(); }
   if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { au(); const d = e.code === 'ArrowLeft' ? -1 : 1; throwPunch('hook', fx, fy, fx, fy, 0.8, [d, 0]); }
@@ -1878,10 +1900,10 @@ function render(t) {
     ctx.beginPath(); ctx.arc(p.x, p.y, r, -Math.PI / 2, -Math.PI / 2 + TAU * p.charge);
     ctx.strokeStyle = p.charge >= 1 ? '#ff4d5e' : '#f5c044'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.strokeStyle = 'rgba(245,192,68,.25)'; ctx.lineWidth = 2; ctx.stroke();
-    const ox = W / 2 + (-jabSide) * W * 0.5, oy = H + 160 * S;
+    const ox = W / 2 + jabSide * W * 0.5, oy = H + 160 * S;
     const wob = Math.sin(t * 60) * 3 * p.charge;
     const gx = lerp(ox, p.x, 0.28) + wob, gy = lerp(oy, p.y, 0.28) - 20 * S;
-    drawGlove(ctx, gx, gy, 200 * S, Math.atan2(p.y - gy, p.x - gx) + Math.PI / 2, ox + (-jabSide) * 80 * S, oy + 80 * S);
+    drawGlove(ctx, gx, gy, 200 * S, Math.atan2(p.y - gy, p.x - gx) + Math.PI / 2, ox + jabSide * 80 * S, oy + 80 * S);
   }
   // first-visit nudge
   if (G.mode === 'title' && !everHit) {
@@ -1906,13 +1928,16 @@ function render(t) {
 }
 let lastT = performance.now();
 function frame(nowMs) {
-  const real = Math.min(0.05, (nowMs - lastT) / 1000); lastT = nowMs;
+  requestAnimationFrame(frame);
+  const real = Math.max(0, Math.min(0.05, (nowMs - lastT) / 1000)); lastT = nowMs;
   let dt = real;
   if (G.hitStop > 0) { G.hitStop -= real; dt = 0; }
-  step(dt, real);
-  render(nowMs / 1000);
-  if (G.mode === 'play') hudTick();
-  requestAnimationFrame(frame);
+  try {
+    if (!W || !H) { if (cv.clientWidth && cv.clientHeight) resize(); return; }
+    step(dt, real);
+    render(nowMs / 1000);
+    if (G.mode === 'play') hudTick();
+  } catch (e) { if (!frame.warned) { frame.warned = true; console.error(e); } }
 }
 
 /* ------------------------------------------------------------------ UI */
@@ -1926,6 +1951,7 @@ function setMute(m) {
   $('muteBtn').innerHTML = m ? ICON_OFF : ICON_ON;
   $('muteBtn').setAttribute('aria-label', m ? 'Turn sound on' : 'Mute sound');
   if (AU.ctx) AU.master.gain.setTargetAtTime(m ? 0 : 0.95, AU.ctx.currentTime, 0.05);
+  if (m) { try { speechSynthesis.cancel(); } catch (e) {} }
 }
 setMute(AU.muted);
 $('muteBtn').addEventListener('click', () => { au(); setMute(!AU.muted); });
@@ -2026,8 +2052,17 @@ if (!('speechSynthesis' in window)) { robotBtn.disabled = true; if (voiceMode ==
 setVoice(voiceMode === 'real' ? 'mumble' : voiceMode, false);
 
 $('goBtn').addEventListener('click', startGame);
+function clearRound() {
+  gloves.length = 0; parts.length = 0;
+  for (const p of ptrs.values()) if (p.charging) SFX.chargeStop();
+  ptrs.clear();
+  G.resumeAt = 0; G.hitStop = 0; G.combo = 0;
+  penaltyEl.hidden = true; passEl.hidden = true; setInert(false);
+}
 function startGame() {
   au();
+  clearRound();
+  if (voiceMode === 'robot' && 'speechSynthesis' in window) { try { speechSynthesis.speak(new SpeechSynthesisUtterance('')); } catch (e) {} }
   const drink = gameMode === 'drink', s0 = drink ? 0.78 : mood;
   Object.assign(G, { mode: 'play', drink, stress: s0, startStress: s0, shown: s0, hits: 0, big: 0, hairLifts: 0, cuts: 0, dazes: 0, teeth: 0, t0: performance.now() / 1000, combo: 0, bestCombo: 0, ko: false, dazed: 0, daze: 0, wiped: 0,
     turn: 0, drinks: 0, sinceDrink: 0, turnLock: 0, sadLast: false, sadPrev: false, lastDrink: null, resumeAt: 0 });
@@ -2038,7 +2073,10 @@ function startGame() {
   setTimeout(musicStart, 900);
   setTimeout(() => speak('welcome', true), 1100);
 }
-$('doneBtn').addEventListener('click', () => { if (G.mode !== 'play') return; speak('quit', true); setTimeout(showEnd, 1600); G.mode = 'ending'; });
+$('doneBtn').addEventListener('click', () => {
+  if (G.mode !== 'play') return;
+  clearRound(); speak('quit', true); G.mode = 'ending'; setTimeout(showEnd, 1600);
+});
 
 /* ------------------------------------------------------------ drinking game */
 const penaltyEl = $('penalty'), passEl = $('pass');
@@ -2056,11 +2094,14 @@ function endTurn(p, landed) {
   if (Math.random() < chance) { G.turnLock = Infinity; setTimeout(() => punish(p, landed), 750); }
   else {
     G.turnLock = performance.now() + 1100;
+    try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {}
     passEl.hidden = false; passEl.style.animation = 'none'; void passEl.offsetWidth; passEl.style.animation = '';
     clearTimeout(passTimer); passTimer = setTimeout(() => { passEl.hidden = true; }, 1100);
   }
   hudTick(true);
 }
+// while the punishment card is up, everything behind it is out of reach
+function setInert(on) { for (const el of [hud, cv, hint]) { try { el.inert = on; } catch (e) {} } }
 function punish(p, landed) {
   if (G.mode !== 'play') return;
   const D = LINES.drink;
@@ -2080,14 +2121,15 @@ function punish(p, landed) {
   passEl.hidden = true;
   $('penLine').textContent = txt;
   $('penSub').textContent = `Turn ${G.turn}`;
-  penaltyEl.hidden = false;
+  penaltyEl.hidden = false; setInert(true);
+  try { if (navigator.vibrate) navigator.vibrate([60, 40, 60]); } catch (e) {}
   SFX.bell(1);
   speak('drink', true, { text: txt });
   setTimeout(() => $('penDone').focus(), 50);
   hudTick(true);
 }
 $('penDone').addEventListener('click', () => {
-  penaltyEl.hidden = true;
+  penaltyEl.hidden = true; setInert(false);
   G.turnLock = performance.now() + 250;
 });
 const modeBtns = [...document.querySelectorAll('#modeSeg button')];
@@ -2114,7 +2156,7 @@ function showEnd() {
   musicStop(); SFX.calm();
   const [s0, d0] = bp(G.startStress), [s1, d1] = bp(G.stress);
   const pct = Math.round(clamp((G.startStress - G.stress) / Math.max(0.01, G.startStress), 0, 1) * 100);
-  penaltyEl.hidden = true; passEl.hidden = true;
+  clearRound();
   const secs = Math.round(performance.now() / 1000 - G.t0);
   const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
   let stats;
@@ -2139,7 +2181,7 @@ function showEnd() {
     if (life.sessions > 0 && G.bestCombo > life.bestCombo && G.bestCombo > 4) news.push(`New best streak: <b>${G.bestCombo} in a row</b>.`);
     life.thumps += G.hits; life.sessions++; life.hair += G.hairLifts;
     life.bestHits = Math.max(life.bestHits, G.hits); life.bestCombo = Math.max(life.bestCombo, G.bestCombo);
-    life.bestBig = Math.max(life.bestBig, G.big); life.bestCalm = Math.max(life.bestCalm, pct);
+    life.bestBig = Math.max(life.bestBig, G.big); if (!G.drink) life.bestCalm = Math.max(life.bestCalm, pct);
     store.set('life', life);
   }
   for (const w of WEAPONS) if (unlocked(w) && !before.includes(w.id)) news.push(`Unlocked: <b>${w.name}</b>. Pick it before your next round.`);
@@ -2149,21 +2191,30 @@ function showEnd() {
   $('news').hidden = !news.length;
   G.lastPct = pct; G.lastBP = [s0, d0, s1, d1];
   $('rant').textContent = writeRant(pct);
+  cardReady = null;
   $('pf1').textContent = `${(rand(12, 90)).toFixed(1)}K ReThumps`;
   $('pf2').textContent = `${Math.round(rand(40, 190))}K Likes`;
   // avatar: crop his battered face straight off the stage
   try {
     const [cx, cy] = toScreen(0, -40); const r = 250 * S * cam.z;
-    faceShot.getContext('2d').clearRect(0, 0, 600, 600);
-    faceShot.getContext('2d').drawImage(cv, (cx - r) * DPR, (cy - r) * DPR, r * 2 * DPR, r * 2 * DPR, 0, 0, 600, 600);
+    const fs = faceShot.getContext('2d'); fs.fillStyle = '#22356a'; fs.fillRect(0, 0, 600, 600);
+    const k = 600 / (2 * r * DPR);
+    const sx = Math.max(0, (cx - r) * DPR), sy = Math.max(0, (cy - r) * DPR);
+    const ex = Math.min(cv.width, (cx + r) * DPR), ey = Math.min(cv.height, (cy + r) * DPR);
+    if (ex > sx && ey > sy) fs.drawImage(cv, sx, sy, ex - sx, ey - sy, (sx - (cx - r) * DPR) * k, (sy - (cy - r) * DPR) * k, (ex - sx) * k, (ey - sy) * k);
     const a = $('avatar').getContext('2d'); a.clearRect(0, 0, 92, 92); a.drawImage(faceShot, 0, 0, 92, 92);
   } catch (e) {}
   hud.hidden = true; hint.hidden = true; endEl.hidden = false;
+  prepareCard();
 }
 
 const faceShot = document.createElement('canvas'); faceShot.width = faceShot.height = 600;
 function writeRant(pct) {
   const h = G.hits;
+  if (!h) return pick([
+    `Somebody opened my app and didn't even throw ONE punch. Couldn't do it. Too scared. Total chicken. I respect it, frankly.`,
+    `Zero punches. ZERO. They took one look at this beautiful face and gave up. Smart. Very smart person!`
+  ]);
   const lines = [];
   lines.push(pick([
     `Just got punched ${h} times by a VERY angry person. Probably on the toilet. Total loser!`,
@@ -2197,7 +2248,7 @@ $('copyBtn').addEventListener('click', async () => {
   setTimeout(() => { btn.textContent = 'Copy his rant'; }, 1800);
 });
 $('againBtn').addEventListener('click', () => {
-  endEl.hidden = true; startEl.hidden = false; G.mode = 'title'; G.ko = false; G.dazed = 0; resetDamage(); hair.mess = 0;
+  endEl.hidden = true; startEl.hidden = false; G.mode = 'title'; G.ko = false; G.dazed = 0; resetDamage(); hair.mess = 0; clearRound();
   stopSpeech(false); bubbleEl.hidden = true; renderWeapons();
 });
 
@@ -2216,7 +2267,8 @@ function renderCard() {
   const disp = '"Bowlby One","Arial Black",Impact,sans-serif', cond = '"Barlow Condensed","Arial Narrow",sans-serif';
   x.textBaseline = 'alphabetic';
   x.save(); x.translate(70, 190); x.rotate(-0.035);
-  x.font = `400 150px ${disp}`; x.fillStyle = '#6d0c1c'; x.fillText('THUMPED.', 0, 18); x.fillStyle = '#d9283f'; x.fillText('THUMPED.', 0, 9); x.fillStyle = '#fbf3e4'; x.fillText('THUMPED.', 0, 0);
+  const head = G.drink ? 'LAST ORDERS.' : 'THUMPED.';
+  x.font = `400 ${G.drink ? 118 : 150}px ${disp}`; x.fillStyle = '#6d0c1c'; x.fillText(head, 0, 18); x.fillStyle = '#d9283f'; x.fillText(head, 0, 9); x.fillStyle = '#fbf3e4'; x.fillText(head, 0, 0);
   x.restore();
   x.save(); x.beginPath(); x.arc(810, 430, 190, 0, TAU); x.closePath(); x.fillStyle = '#22356a'; x.fill(); x.clip(); x.drawImage(faceShot, 620, 240, 380, 380); x.restore();
   x.beginPath(); x.arc(810, 430, 190, 0, TAU); x.lineWidth = 12; x.strokeStyle = '#f5c044'; x.stroke();
@@ -2239,16 +2291,30 @@ function renderCard() {
   x.fillStyle = '#8392b8'; x.font = `600 28px ${cond}`; x.textAlign = 'right'; x.fillText('SATIRE · HE IS A CARTOON', W2 - 70, H2 - 66);
   return c;
 }
-$('cardBtn').addEventListener('click', async () => {
+// render the card when the end screen opens, so the Share tap can call
+// navigator.share immediately (iOS drops the gesture after awaits)
+let cardReady = null;
+async function prepareCard() {
   try { await document.fonts.ready; } catch (e) {}
   const c = renderCard();
+  const blob = await new Promise(r => { try { c.toBlob(r, 'image/png'); } catch (e) { r(null); } });
+  cardReady = { canvas: c, file: blob ? new File([blob], 'donald-thump.png', { type: 'image/png' }) : null };
+}
+$('cardBtn').addEventListener('click', async () => {
+  if (!cardReady) await prepareCard();
+  const { canvas, file } = cardReady;
   try {
-    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-    const file = new File([blob], 'donald-thump.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: 'I just thumped Donald Thump.' }); return; }
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: 'I just thumped Donald Thump.' }); return; }
   } catch (e) { if (e && e.name === 'AbortError') return; }
-  $('cardImg').src = c.toDataURL('image/png');
+  $('cardImg').src = canvas.toDataURL('image/png');
   $('card').hidden = false;
+  $('cardClose').focus();
+});
+$('card').addEventListener('click', e => { if (e.target.id === 'card') $('card').hidden = true; });
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' && e.key !== 'Enter') return;
+  if (!$('card').hidden && e.key === 'Escape') { $('card').hidden = true; $('cardBtn').focus(); }
+  else if (!penaltyEl.hidden) { e.preventDefault(); $('penDone').click(); }
 });
 $('cardClose').addEventListener('click', () => { $('card').hidden = true; });
 
