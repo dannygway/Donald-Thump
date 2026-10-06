@@ -9,7 +9,7 @@ Host the folder anywhere with HTTPS (GitHub Pages works). On a phone, open it an
 
 ## Modes
 - **Stress relief** (solo): punch until your blood pressure is back to normal.
-- **Drinking game**: pass the phone, one punch each. Every few turns Thump hands out one of 10 drinking punishments in his own voice (never two turns in a row, always within 10 turns). Some only fire when they fit: "Nice punch" needs a big hit, "both of those punches were sad" needs two weak ones in a row. 18+.
+- **Drinking game**: pass the phone, one punch each. Every few turns Thump hands out one of 10 drinking punishments in his own voice (never two turns in a row; the odds rise with every dry turn, so they land unpredictably, usually 3–12 turns apart). Some only fire when they fit: "Nice punch" needs a big hit, "both of those punches were sad" needs two weak ones in a row. 18+.
 
 ## How to play
 - **Tap**: jab (left and right gloves alternate)

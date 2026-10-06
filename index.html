@@ -2049,8 +2049,10 @@ function endTurn(p, landed) {
   G.turn++;
   G.sadPrev = G.sadLast; G.sadLast = !landed || p < 0.45;
   G.sinceDrink++;
-  // never in the first couple of turns after one, guaranteed by the tenth
-  const chance = G.sinceDrink < 3 ? 0 : G.sinceDrink >= 10 ? 1 : 0.15;
+  // never back to back; after that the odds creep up each dry turn, so
+  // punishments land anywhere from turn 2 to ~16 with no fixed rhythm
+  const k = G.sinceDrink;
+  const chance = k < 2 ? 0 : k >= 16 ? 1 : 0.05 + 0.03 * (k - 2);
   if (Math.random() < chance) { G.turnLock = Infinity; setTimeout(() => punish(p, landed), 750); }
   else {
     G.turnLock = performance.now() + 1100;
