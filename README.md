@@ -7,6 +7,10 @@ Open `index.html` in any modern browser (phone or desktop). No build step and no
 ## Install it like an app
 Host the folder anywhere with HTTPS (GitHub Pages works). On a phone, open it and choose **Add to Home Screen**. It runs full-screen with its own icon and works offline (`manifest.webmanifest`, `sw.js`, `icons/`).
 
+## Modes
+- **Stress relief** (solo): punch until your blood pressure is back to normal.
+- **Drinking game**: pass the phone, one punch each. Every few turns Thump hands out one of 10 drinking punishments in his own voice (never two turns in a row, always within 10 turns). Some only fire when they fit: "Nice punch" needs a big hit, "both of those punches were sad" needs two weak ones in a row. 18+.
+
 ## How to play
 - **Tap**: jab (left and right gloves alternate)
 - **Swipe** sideways: hook
@@ -22,6 +26,7 @@ Host the folder anywhere with HTTPS (GitHub Pages works). On a phone, open it an
 - **He talks back**: parody lines in a synthesised mumble voice (or the device's text-to-speech). Punch him mid-sentence and the line gets cut off.
 - **Blood pressure meter**: your stress shown in mmHg with real AHA categories. Each punch brings it down.
 - **Adaptive music**: one generative loop that moves from fast and aggressive to slow lo-fi as you calm down
+- **He reacts to *that* punch**: light hits get dismissive bluster, big ones get "Okay, that one hurt". Lines come from a shuffled bag so none repeat until the set is used up. Grunts climb in pitch and volume through a flurry. Cut him off and he sometimes tries again ("As I was SAYING...").
 - **Body shots**: punches that land on the suit count, rattle the tie and make him double over
 - **Weapons you unlock by playing**: boxing glove, golden glove (150 lifetime thumps), rubber chicken (400), wet fish (800), each with its own sound
 - **One hint at a time**: the next move you haven't tried yet. Hints stop once you've tried them all.

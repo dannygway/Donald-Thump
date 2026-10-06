@@ -136,6 +136,27 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 #card img{max-width:100%;max-height:68vh;border-radius:14px;box-shadow:0 10px 0 rgba(0,0,0,.35);-webkit-touch-callout:default}
 #card p{margin:0;text-align:center;font:500 14px/1.4 var(--body);color:#cdd6ee;max-width:36ch}
 #card .ghost{height:48px;padding:0 22px}
+.gmodes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gmodes button{border:1.5px solid rgba(159,176,214,.28);background:rgba(22,36,74,.75);border-radius:14px;padding:11px 12px 10px;text-align:left;display:grid;gap:4px}
+.gmodes .t{font:400 17px/1 var(--display);letter-spacing:.02em}
+.gmodes .r{font:600 11.5px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.gmodes button[aria-pressed="true"]{border-color:var(--gold);background:rgba(245,192,68,.14)}
+.gmodes button[aria-pressed="true"] .t{color:var(--gold)}
+.rules{margin:0;font:500 15px/1.45 var(--body);color:#cdd6ee;max-width:46ch}
+.opts{display:grid;gap:12px}
+.dk{flex:1;max-width:240px;min-width:0;display:grid;gap:5px}
+#turnVal{font:400 26px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+#pass{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);transform:translateX(-50%);background:var(--gold);color:var(--night);font:400 20px/1 var(--display);letter-spacing:.04em;padding:12px 20px 11px;border-radius:999px;box-shadow:0 5px 0 var(--gold-deep);pointer-events:none;white-space:nowrap;animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
+#penalty{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+.pen-in{width:100%;max-width:420px;background:var(--cream);color:var(--night);border-radius:20px;overflow:hidden;box-shadow:0 10px 0 rgba(0,0,0,.35);transform:rotate(-2deg);animation:slam .45s cubic-bezier(.2,1.4,.3,1) both}
+.pen-band{background:var(--red);color:var(--cream);padding:12px 20px 11px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.pen-band b{font:400 18px/1 var(--display);letter-spacing:.06em}
+.pen-band span{font:700 13px/1 var(--cond);letter-spacing:.14em;text-transform:uppercase;opacity:.9;font-variant-numeric:tabular-nums}
+.pen-body{padding:22px 20px 20px;display:grid;gap:18px}
+#penLine{margin:0;font:400 clamp(28px,8vw,38px)/1.05 var(--display);text-wrap:balance}
+.pen-body .go{height:56px;font-size:18px}
+@keyframes slam{0%{transform:scale(1.6) rotate(-8deg);opacity:0}60%{transform:scale(.96) rotate(-1deg);opacity:1}100%{transform:scale(1) rotate(-2deg)}}
+@media (prefers-reduced-motion:reduce){.pen-in,#pass{animation:none}}
 @media (max-height:760px){.tag{display:none}.sheet{padding-top:40px}.sheet-in{gap:11px}}
 @media (max-width:380px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){.end-in{animation:none}#bubble.cut{animation-duration:.2s}}
@@ -150,7 +171,12 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
   <div id="bubble" hidden><span class="who">Donald J. Thump</span><span id="bubbleText"></span></div>
 
   <header id="hud" hidden>
-    <div class="bp">
+    <div class="dk" id="drinkHud" hidden>
+      <div class="label">Drinking game</div>
+      <span id="turnVal">Turn 1</span>
+      <span class="label" id="drinksVal">0 drinks dished</span>
+    </div>
+    <div class="bp" id="bpHud">
       <div class="label">Your blood pressure</div>
       <div class="bp-read"><span id="bpVal">162/105</span><span class="unit">mmHg</span><span id="bpCat" class="cat">Stage 2</span></div>
       <div class="bp-bar"><i id="bpMark"></i></div>
@@ -170,12 +196,22 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
       <div class="eyebrow">Stress relief, by hand</div>
       <h1 class="logo" id="logo"><span class="l1">DONALD</span><span class="l2">THUMP</span></h1>
       <p class="tag">Saw the news? Bad day at work? Five spare minutes on the toilet? Thump it out of your system.</p>
+      <div class="gmodes" id="modeSeg" role="group" aria-label="Game mode">
+        <button type="button" data-m="relief" aria-pressed="true"><span class="t">Stress relief</span><span class="r">Solo · blood pressure</span></button>
+        <button type="button" data-m="drink" aria-pressed="false"><span class="t">Drinking game</span><span class="r">Pass the phone</span></button>
+      </div>
+      <div class="opts" id="drinkOpts" hidden>
+        <p class="rules">Pass the phone round the group. One punch each. Every so often Thump hands out a drinking punishment, in his own words.</p>
+        <p class="fine">18+ only. Know your limits. Water counts as a drink.</p>
+      </div>
+      <div class="opts" id="reliefOpts">
       <div class="q">How annoyed are you right now?</div>
       <div class="moods" id="moods">
         <button class="chip-btn" type="button" data-s="0.45" aria-pressed="false"><span class="t">Mildly peeved</span><span class="r">134/93 mmHg</span></button>
         <button class="chip-btn" type="button" data-s="0.65" aria-pressed="true"><span class="t">Saw the news</span><span class="r">163/102 mmHg</span></button>
         <button class="chip-btn" type="button" data-s="0.82" aria-pressed="false"><span class="t">Work was a nightmare</span><span class="r">176/110 mmHg</span></button>
         <button class="chip-btn" type="button" data-s="1" aria-pressed="false"><span class="t">Pure rage</span><span class="r">190/118 mmHg</span></button>
+      </div>
       </div>
       <div class="wrow"><span class="label">Weapon</span><div class="weapons" id="weapons"></div></div>
       <button id="goBtn" class="go" type="button">
@@ -210,6 +246,18 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
         <button id="copyBtn" class="ghost" type="button">Copy his rant</button>
         <button id="cardBtn" class="ghost" type="button">Share card</button>
         <button id="againBtn" class="go wide" type="button">Thump again</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="pass" hidden>Pass it on</div>
+
+  <section id="penalty" hidden role="dialog" aria-modal="true" aria-labelledby="penLine">
+    <div class="pen-in">
+      <div class="pen-band"><b>THUMP SAYS</b><span id="penSub">Turn 8</span></div>
+      <div class="pen-body">
+        <h2 id="penLine">Do a shot.</h2>
+        <button id="penDone" class="go" type="button">Done. Next punch</button>
       </div>
     </div>
   </section>
@@ -1210,7 +1258,20 @@ const LINES = {
   quit: ["Leaving already? Quitter! Low energy!"],
   ko: ["...SAD."],
   welcome: ["Oh look. Another one. Very angry. Very angry person.", "Here we go. Another hater. Lots of haters."],
-  body: ["Oof! Not the tie!", "Ugh! Watch the suit! Very expensive suit!", "Below the belt! Very below the belt!", "My lunch! That was eleven cheeseburgers!"]
+  body: ["Oof! Not the tie!", "Ugh! Watch the suit! Very expensive suit!", "Below the belt! Very below the belt!", "My lunch! That was eleven cheeseburgers!"],
+  resume: ["As I was SAYING...", "Excuse me, I was talking!", "Can I finish? CAN I FINISH?", "Rude. Very rude. Where was I?", "Nobody interrupts me. Nobody! Anyway...", "I'm going to start again. From the top."],
+  drink: [
+    "Do a shot.",
+    "Finish your drink.",
+    "Take a big sip.",
+    "Nice punch, give someone else a shot.",
+    "Upside down sip.",
+    "Sip from someone else's drink.",
+    "You and the last person can drink because both of those punches were sad.",
+    "Last one to say Donald Thump is the best has to drink!",
+    "Give your drink to a friend to finish. They can also get you a new one.",
+    "EVERYONE DRINK."
+  ]
 };
 /*LINES-END*/
 const VOW = [[730, 1090], [570, 840], [300, 870], [530, 1840], [270, 2290], [660, 1720], [640, 1190]];
@@ -1244,9 +1305,30 @@ function preloadClips() {
   const files = Object.values(CLIPS.manifest.lines).flat().map(l => l.file);
   (async () => { for (const f of files) await clipBuffer(f); })();
 }
-function speakClip(kind) {
-  const list = CLIPS.manifest.lines[kind];
-  const entry = Array.isArray(kind) ? null : (list && list.length ? pick(list) : null);
+/* Lines come out of a shuffled bag per category, so nothing repeats until
+   the whole set has played, and never twice in a row across refills. */
+const bags = {};
+function bagPick(key, items) {
+  if (!items.length) return null;
+  let b = bags[key];
+  if (!b || !b.items.length || b.size !== items.length) {
+    const fresh = items.slice().sort(() => Math.random() - 0.5);
+    if (b && fresh.length > 1 && fresh[0] === b.last) fresh.push(fresh.shift());
+    b = bags[key] = { items: fresh, size: items.length, last: b && b.last };
+  }
+  const it = b.items.shift(); b.last = it; return it;
+}
+// big hits get the "that one hurt" lines, light ones get dismissive bluster
+const HIT_HEAVY = new Set(["Ooh. Tremendous.", "Okay, that one hurt.", "Ow ow ow. SAD!", "My beautiful face!", "Excuse me! EXCUSE me!", "Lawyers! Where are my lawyers?", "I'll sue! Big lawsuit!", "Disgraceful!", "Not the face!"]);
+function lineOk(kind, text, opts) {
+  if (opts.text) return text === opts.text;
+  if (kind === 'hit' && opts.tier) return (opts.tier === 'heavy') === HIT_HEAVY.has(text);
+  return true;
+}
+
+function speakClip(kind, opts = {}) {
+  const list = (CLIPS.manifest.lines[kind] || []).filter(l => lineOk(kind, l.text, opts));
+  const entry = bagPick('clip:' + kind + ':' + (opts.text || opts.tier || ''), list);
   if (!entry) return false;
   stopSpeech(false);
   G.lastTalk = performance.now() / 1000;
@@ -1277,14 +1359,19 @@ function grunt(p) {
   const big = p > 0.8 ? list.filter(g => /_(09|10)\./.test(g.file)) : list.filter(g => !/_(09|10)\./.test(g.file));
   const b = CLIPS.buf.get(pick(big.length ? big : list).file); if (!b) return;
   lastGrunt = t;
-  const src = AU.ctx.createBufferSource(); src.buffer = b; src.playbackRate.value = rand(0.97, 1.04);
-  const g = AU.ctx.createGain(); g.gain.value = 0.3; src.connect(g); g.connect(AU.voiceOut); src.start();
+  // a flurry pushes him higher and louder, like he's coming apart
+  const build = Math.max(0, G.combo - 2);
+  const src = AU.ctx.createBufferSource(); src.buffer = b; src.playbackRate.value = rand(0.97, 1.04) * (1 + Math.min(0.22, build * 0.016));
+  const g = AU.ctx.createGain(); g.gain.value = 0.3 * (1 + Math.min(0.5, build * 0.03)); src.connect(g); g.connect(AU.voiceOut); src.start();
 }
 
-function speak(kind, force) {
+function speak(kind, force, opts = {}) {
   if (speech && !speech.done && !force) return;
-  if (voiceMode === 'real' && CLIPS.manifest && speakClip(kind)) return;
-  const line = Array.isArray(kind) ? pick(kind) : pick(LINES[kind]);
+  if (voiceMode === 'real' && CLIPS.manifest && speakClip(kind, opts)) return;
+  const line = opts.text || bagPick('txt:' + kind + ':' + (opts.tier || ''), LINES[kind].filter(t => lineOk(kind, t, opts))) || pick(LINES[kind]);
+  // recorded voice is on but this line isn't voiced yet: show it as a caption
+  // rather than switching to the synth mumble mid-conversation
+  const silent = voiceMode === 'real' && !!CLIPS.manifest;
   stopSpeech(false);
   G.lastTalk = performance.now() / 1000;
   const t0 = now() + 0.03;
@@ -1302,9 +1389,9 @@ function speak(kind, force) {
     t += /[.!?]$/.test(w) ? 0.22 : /[,]$/.test(w) ? 0.12 : 0.03;
     cp += w.length + 1;
   });
-  speech = { line, plan, t0, end: t, done: false, robot: false, bus: null, shown: 0 };
+  speech = { line, plan, t0, end: t, done: false, robot: false, bus: null, shown: 0, silent };
   const c = AU.ctx;
-  if (voiceMode === 'robot' && 'speechSynthesis' in window) {
+  if (!silent && voiceMode === 'robot' && 'speechSynthesis' in window) {
     speech.robot = true;
     try {
       const u = new SpeechSynthesisUtterance(line.replace(/\.\.\./g, ', '));
@@ -1316,7 +1403,7 @@ function speak(kind, force) {
       speechSynthesis.cancel(); speechSynthesis.speak(u);
     } catch (e) { speech.robot = false; }
   }
-  if (!speech.robot && c) {
+  if (!silent && !speech.robot && c) {
     const bus = c.createGain(); bus.gain.value = 1; bus.connect(AU.voiceOut); speech.bus = bus;
     for (const s of plan) {
       const o = c.createOscillator(); o.type = 'sawtooth';
@@ -1362,7 +1449,7 @@ function revealChars() {
   return ch;
 }
 function mouthFromSpeech() {
-  if (!speech || speech.done) return 0;
+  if (!speech || speech.done || speech.silent) return 0;
   const t = now();
   if (speech.clip) {
     if (!speech.an || t > speech.end) return 0;
@@ -1405,6 +1492,7 @@ function toScreen(x, y) { const p = headM.transformPoint(new DOMPoint(x, y)); re
 function onHead(lx, ly) { return Math.pow(lx / 222, 2) + Math.pow((ly + 18) / 292, 2) <= 1; }
 
 function throwPunch(kind, sx, sy, tx, ty, power, dir) {
+  if (G.mode === 'play' && G.drink) G.turnLock = Infinity;
   const [lx, ly] = toLocal(tx, ty);
   const hit = onHead(lx, ly);
   let ox, oy, cx, cy, travel, dur;
@@ -1438,7 +1526,7 @@ function tallyHit(p, scale) {
   if (G.mode === 'play') {
     G.hits++;
     G.big = Math.max(G.big, p);
-    G.stress = Math.max(0, G.stress - p * 0.025 * scale * (0.7 + 0.7 * G.stress));
+    if (!G.drink) G.stress = Math.max(0, G.stress - p * 0.025 * scale * (0.7 + 0.7 * G.stress));
   }
 }
 function weaponSfx() {
@@ -1457,8 +1545,9 @@ function applyBody(g) {
   try { if (navigator.vibrate) navigator.vibrate(Math.round(10 + p * 25)); } catch (e) {}
   face.wince = 0.3; face.ouch = 0.9; face.raise = 1;
   tallyHit(p, 0.75);
-  if (stopSpeech(true)) G.cuts++;
+  if (stopSpeech(true)) { G.cuts++; queueResume(); }
   if (Math.random() < 0.55) setTimeout(() => speak('body'), 100);
+  endTurn(p, true);
 }
 
 function applyHit(g) {
@@ -1466,6 +1555,7 @@ function applyHit(g) {
   if (!g.hit) {
     SFX.miss();
     if (Math.random() < 0.6) speak('miss');
+    endTurn(0, false);
     return;
   }
   const p = g.power, kind = g.kind, lx = g.lx, ly = g.ly;
@@ -1535,7 +1625,7 @@ function applyHit(g) {
   tallyHit(p, 1);
   G.daze += p * 0.75;
   const wasCut = stopSpeech(true);
-  if (wasCut) G.cuts++;
+  if (wasCut) { G.cuts++; queueResume(); }
 
   if (tooth) speak('tooth', true);
   else if (G.daze > 3.4 && G.dazed <= 0 && !G.ko) {
@@ -1544,15 +1634,22 @@ function applyHit(g) {
   } else if (G.dazed > 0) { G.dazed = Math.min(4, G.dazed + 0.4); }
   else if (G.combo === 12 || G.combo === 28) speak('combo', true);
   else if (kind === 'upper' && Math.random() < 0.5) setTimeout(() => !hair.lifted && speak('upper'), 120);
-  else if (Math.random() < 0.28 + p * 0.3) setTimeout(() => speak('hit'), 90 + Math.random() * 160);
+  else if (Math.random() < 0.28 + p * 0.3) setTimeout(() => speak('hit', false, { tier: p > 0.62 ? 'heavy' : 'light' }), 90 + Math.random() * 160);
+  endTurn(p, true);
+}
+
+// after you cut him off, sometimes he tries to pick up where he left off
+function queueResume() {
+  G.resumeAt = Math.random() < 0.45 ? performance.now() / 1000 + 0.95 : 0;
 }
 
 /* ------------------------------------------------------------------ input */
 const ptrs = new Map();
 let lastPtr = null;
+function turnLocked() { return G.mode === 'play' && G.drink && (!penaltyEl.hidden || performance.now() < G.turnLock); }
 cv.addEventListener('pointerdown', e => {
   au();
-  if (G.mode === 'end') return;
+  if (G.mode === 'end' || turnLocked()) return;
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   ptrs.set(e.pointerId, { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t0: performance.now(), moved: false, charging: false, charge: 0 });
   lastPtr = [e.clientX, e.clientY];
@@ -1600,7 +1697,7 @@ cv.addEventListener('pointerup', e => endPtr(e, false));
 cv.addEventListener('pointercancel', e => endPtr(e, true));
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => {
-  if (G.mode === 'end' || e.repeat) return;
+  if (G.mode === 'end' || e.repeat || turnLocked()) return;
   const [fx, fy] = toScreen(rand(-80, 80), rand(-120, 140));
   if (e.code === 'Space') { au(); throwPunch('jab', fx, fy, fx, fy, 0.35, [0, -1]); e.preventDefault(); }
   if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { au(); const d = e.code === 'ArrowLeft' ? -1 : 1; throwPunch('hook', fx, fy, fx, fy, 0.8, [d, 0]); }
@@ -1697,6 +1794,10 @@ function step(dt, real) {
       if (now() > speech.end + 1.4) { speech.done = true; bubbleEl.hidden = true; musicLevel(0.22, 0.3); }
     } else if (speech.hideAt && performance.now() / 1000 > speech.hideAt) { bubbleEl.hidden = true; speech.hideAt = 0; }
   }
+  // "as I was saying..."
+  if (G.resumeAt && t > G.resumeAt && t - G.lastHit > 0.8 && !G.ko && G.dazed <= 0 && (!speech || speech.done || speech.cutShown)) {
+    G.resumeAt = 0; speak('resume', true);
+  }
   // idle taunts
   if ((G.mode === 'play' || G.mode === 'title') && !G.ko && G.dazed <= 0 && (!speech || speech.done) && t - G.lastTalk > (G.mode === 'title' ? 7 : 4.5) && t - G.lastHit > 2.5 && !bubbleBusy()) {
     if (AU.ctx || G.mode === 'play') speak('taunt');
@@ -1706,7 +1807,7 @@ function step(dt, real) {
   // stress → music → UI
   G.shown = lerp(G.shown, G.stress, 1 - Math.exp(-real * 3));
   MUS.s = G.mode === 'play' ? clamp(G.shown, 0, 1) : MUS.s;
-  if (G.mode === 'play' && !G.ko && G.stress <= 0.06) knockout();
+  if (G.mode === 'play' && !G.drink && !G.ko && G.stress <= 0.06) knockout();
   if (G.ko && performance.now() / 1000 - G.koT > 3 && G.mode === 'play') showEnd();
 
   G.shake = Math.max(0, G.shake - real * 2.2);
@@ -1887,8 +1988,12 @@ function bpCat(sys, dia) {
   return ['Normal', '#4fd18b'];
 }
 let hudLast = 0, hudCat = '';
-function hudTick() {
-  const n = performance.now(); if (n - hudLast < 90) return; hudLast = n;
+function hudTick(force) {
+  const n = performance.now(); if (!force && n - hudLast < 90) return; hudLast = n;
+  if (G.drink) {
+    $('turnVal').textContent = `Turn ${G.turn + 1}`;
+    $('drinksVal').textContent = `${G.drinks} drink${G.drinks === 1 ? '' : 's'} dished`;
+  }
   const [sy, di] = bp(G.shown);
   $('bpVal').textContent = `${sy}/${di}`;
   const [cat, col] = bpCat(sy, di);
@@ -1923,7 +2028,10 @@ setVoice(voiceMode === 'real' ? 'mumble' : voiceMode, false);
 $('goBtn').addEventListener('click', startGame);
 function startGame() {
   au();
-  Object.assign(G, { mode: 'play', stress: mood, startStress: mood, shown: mood, hits: 0, big: 0, hairLifts: 0, cuts: 0, dazes: 0, teeth: 0, t0: performance.now() / 1000, combo: 0, bestCombo: 0, ko: false, dazed: 0, daze: 0, wiped: 0 });
+  const drink = gameMode === 'drink', s0 = drink ? 0.78 : mood;
+  Object.assign(G, { mode: 'play', drink, stress: s0, startStress: s0, shown: s0, hits: 0, big: 0, hairLifts: 0, cuts: 0, dazes: 0, teeth: 0, t0: performance.now() / 1000, combo: 0, bestCombo: 0, ko: false, dazed: 0, daze: 0, wiped: 0,
+    turn: 0, drinks: 0, sinceDrink: 0, turnLock: 0, sadLast: false, sadPrev: false, lastDrink: null, resumeAt: 0 });
+  $('drinkHud').hidden = !drink; $('bpHud').hidden = drink;
   startEl.hidden = true; hud.hidden = false; refreshHint(); preloadClips(); preloadSamples();
   MUS.s = mood;
   SFX.bell(3);
@@ -1931,6 +2039,65 @@ function startGame() {
   setTimeout(() => speak('welcome', true), 1100);
 }
 $('doneBtn').addEventListener('click', () => { if (G.mode !== 'play') return; speak('quit', true); setTimeout(showEnd, 1600); G.mode = 'ending'; });
+
+/* ------------------------------------------------------------ drinking game */
+const penaltyEl = $('penalty'), passEl = $('pass');
+let gameMode = store.get('gmode', 'relief');
+let passTimer = 0;
+function endTurn(p, landed) {
+  if (!G.drink || G.mode !== 'play') return;
+  G.turn++;
+  G.sadPrev = G.sadLast; G.sadLast = !landed || p < 0.45;
+  G.sinceDrink++;
+  // never in the first couple of turns after one, guaranteed by the tenth
+  const chance = G.sinceDrink < 3 ? 0 : G.sinceDrink >= 10 ? 1 : 0.15;
+  if (Math.random() < chance) { G.turnLock = Infinity; setTimeout(() => punish(p, landed), 750); }
+  else {
+    G.turnLock = performance.now() + 1100;
+    passEl.hidden = false; passEl.style.animation = 'none'; void passEl.offsetWidth; passEl.style.animation = '';
+    clearTimeout(passTimer); passTimer = setTimeout(() => { passEl.hidden = true; }, 1100);
+  }
+  hudTick(true);
+}
+function punish(p, landed) {
+  if (G.mode !== 'play') return;
+  const D = LINES.drink;
+  const w = D.map((txt, i) => {
+    if (txt === G.lastDrink) return 0;
+    if (i === 3) return landed && p >= 0.7 ? 1.4 : 0;   // nice punch
+    if (i === 6) return G.sadLast && G.sadPrev ? 1.8 : 0; // two sad punches in a row
+    if (i === 9) return 0.45;                            // everyone drinks
+    if (i === 0) return 0.7;                             // shot
+    if (i === 1) return 0.6;                             // finish your drink
+    return 1;
+  });
+  let r = Math.random() * w.reduce((a, b) => a + b, 0), idx = 0;
+  while (idx < D.length - 1 && (r -= w[idx]) > 0) idx++;
+  const txt = D[idx];
+  G.lastDrink = txt; G.drinks++; G.sinceDrink = 0;
+  passEl.hidden = true;
+  $('penLine').textContent = txt;
+  $('penSub').textContent = `Turn ${G.turn}`;
+  penaltyEl.hidden = false;
+  SFX.bell(1);
+  speak('drink', true, { text: txt });
+  setTimeout(() => $('penDone').focus(), 50);
+  hudTick(true);
+}
+$('penDone').addEventListener('click', () => {
+  penaltyEl.hidden = true;
+  G.turnLock = performance.now() + 250;
+});
+const modeBtns = [...document.querySelectorAll('#modeSeg button')];
+function setGameMode(m) {
+  gameMode = m; store.set('gmode', m);
+  modeBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+  $('drinkOpts').hidden = m !== 'drink';
+  $('reliefOpts').hidden = m === 'drink';
+  $('goBtn').lastChild.textContent = m === 'drink' ? ' Start the round' : ' Ring the bell';
+}
+modeBtns.forEach(b => b.addEventListener('click', () => { au(); setGameMode(b.dataset.m); }));
+setGameMode(gameMode === 'drink' ? 'drink' : 'relief');
 
 function knockout() {
   G.ko = true; G.koT = performance.now() / 1000; G.dazed = 0;
@@ -1945,13 +2112,23 @@ function showEnd() {
   musicStop(); SFX.calm();
   const [s0, d0] = bp(G.startStress), [s1, d1] = bp(G.stress);
   const pct = Math.round(clamp((G.startStress - G.stress) / Math.max(0.01, G.startStress), 0, 1) * 100);
-  $('calmBig').textContent = pct >= 1 ? `You're ${pct}% calmer.` : `You're exactly as annoyed as before.`;
-  $('calmSub').textContent = `Blood pressure ${s0}/${d0} → ${s1}/${d1} mmHg · ${bpCat(s1, d1)[0]}`;
+  penaltyEl.hidden = true; passEl.hidden = true;
   const secs = Math.round(performance.now() / 1000 - G.t0);
-  const stats = [
-    [G.hits, 'Thumps'], [(G.big * 10).toFixed(1), 'Hardest hit /10'], [G.bestCombo, 'Best streak'],
-    [G.cuts, 'Times you cut him off'], [G.hairLifts, 'Hair lifts'], [`${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`, 'Session']
-  ];
+  const clock = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  let stats;
+  if (G.drink) {
+    $('endH').textContent = 'LAST ORDERS.';
+    $('calmBig').textContent = `${G.drinks} drink${G.drinks === 1 ? '' : 's'} dished in ${G.turn} punches.`;
+    $('calmSub').textContent = G.lastDrink ? `Last call: “${G.lastDrink}”` : 'He let you all off lightly.';
+    stats = [[G.turn, 'Punches'], [G.drinks, 'Drinks dished'], [(G.big * 10).toFixed(1), 'Hardest hit /10'],
+      [G.cuts, 'Times you cut him off'], [G.hairLifts, 'Hair lifts'], [clock, 'Session']];
+  } else {
+    $('endH').textContent = 'THUMPED.';
+    $('calmBig').textContent = pct >= 1 ? `You're ${pct}% calmer.` : `You're exactly as annoyed as before.`;
+    $('calmSub').textContent = `Blood pressure ${s0}/${d0} → ${s1}/${d1} mmHg · ${bpCat(s1, d1)[0]}`;
+    stats = [[G.hits, 'Thumps'], [(G.big * 10).toFixed(1), 'Hardest hit /10'], [G.bestCombo, 'Best streak'],
+      [G.cuts, 'Times you cut him off'], [G.hairLifts, 'Hair lifts'], [clock, 'Session']];
+  }
   $('stats').innerHTML = stats.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
   const before = WEAPONS.filter(unlocked).map(w => w.id);
   const news = [];
@@ -2001,7 +2178,8 @@ function writeRant(pct) {
   if (weapon === 'fish') lines.push(`Slapped with a fish. A wet FISH. Who does that?`);
   if (weapon === 'gold') lines.push(`Even the glove was gold. Nice glove. Probably stole it from me.`);
   if (G.dazes) lines.push(`I did NOT see any birds. Fake news!`);
-  lines.push(pct > 0 ? `Now they say they're "${pct}% calmer." Very suspicious number!` : `And they're STILL angry. Sad!`);
+  if (G.drink) lines.push(`A whole GROUP of drunk people took turns. I made them drink ${G.drinks} times. I'm the best host, everybody says so!`);
+  else lines.push(pct > 0 ? `Now they say they're "${pct}% calmer." Very suspicious number!` : `And they're STILL angry. Sad!`);
   lines.push(pick(['SAD!', 'TOTAL DISGRACE!', 'See you in court!', 'Many people are saying it!', 'RIGGED!']));
   return lines.join(' ');
 }
@@ -2040,12 +2218,12 @@ function renderCard() {
   x.restore();
   x.save(); x.beginPath(); x.arc(810, 430, 190, 0, TAU); x.closePath(); x.fillStyle = '#22356a'; x.fill(); x.clip(); x.drawImage(faceShot, 620, 240, 380, 380); x.restore();
   x.beginPath(); x.arc(810, 430, 190, 0, TAU); x.lineWidth = 12; x.strokeStyle = '#f5c044'; x.stroke();
-  x.fillStyle = '#f5c044'; x.font = `400 92px ${disp}`; x.fillText(`${G.lastPct || 0}%`, 70, 400);
-  x.font = `400 64px ${disp}`; x.fillText('CALMER', 70, 475);
+  x.fillStyle = '#f5c044'; x.font = `400 92px ${disp}`; x.fillText(G.drink ? `${G.drinks}` : `${G.lastPct || 0}%`, 70, 400);
+  x.font = `400 64px ${disp}`; x.fillText(G.drink ? 'DRINKS' : 'CALMER', 70, 475);
   const [s0, d0, s1, d1] = G.lastBP || [0, 0, 0, 0];
   x.fillStyle = '#cdd6ee'; x.font = `700 40px ${cond}`;
-  x.fillText(`${s0}/${d0} → ${s1}/${d1} mmHg`, 70, 545);
-  x.fillText(`${G.hits} thumps · best streak ${G.bestCombo}`, 70, 595);
+  x.fillText(G.drink ? 'DISHED OUT BY THUMP' : `${s0}/${d0} → ${s1}/${d1} mmHg`, 70, 545);
+  x.fillText(G.drink ? `${G.turn} punches · drinking game` : `${G.hits} thumps · best streak ${G.bestCombo}`, 70, 595);
   const bx = 60, by = 680, bw = W2 - 120, bh = 520;
   x.fillStyle = '#fbfaf7'; x.beginPath(); x.roundRect ? x.roundRect(bx, by, bw, bh, 36) : x.rect(bx, by, bw, bh); x.fill();
   x.drawImage(faceShot, bx + 40, by + 40, 84, 84);
