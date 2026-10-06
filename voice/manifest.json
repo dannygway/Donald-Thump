@@ -74,6 +74,48 @@
     "file": "daze_05.mp3"
    }
   ],
+  "drink": [
+   {
+    "text": "Shot time. You're doing a shot. A tremendous shot, believe me.",
+    "file": "drink_01.mp3"
+   },
+   {
+    "text": "Finish your drink. The whole thing. Nobody leaves a drink like that. Sad!",
+    "file": "drink_02.mp3"
+   },
+   {
+    "text": "Take a sip. A big, beautiful sip. Bigger. BIGGER!",
+    "file": "drink_03.mp3"
+   },
+   {
+    "text": "Nice punch. Very nice. Not as good as mine. Now give somebody a shot.",
+    "file": "drink_04.mp3"
+   },
+   {
+    "text": "Upside down sip! Very hard. Only the best people can do it. Go!",
+    "file": "drink_05.mp3"
+   },
+   {
+    "text": "Steal a sip from somebody else's drink. They won't notice. Nobody notices.",
+    "file": "drink_06.mp3"
+   },
+   {
+    "text": "You and the last guy, drink. Both of those punches were sad. Very sad!",
+    "file": "drink_07.mp3"
+   },
+   {
+    "text": "Last one to say Donald Thump is the best has to drink! Go! GO!",
+    "file": "drink_08.mp3"
+   },
+   {
+    "text": "Give your drink to a friend. They finish it, then they buy you a new one. Great deal!",
+    "file": "drink_09.mp3"
+   },
+   {
+    "text": "EVERYBODY DRINKS! The whole room! Tremendous!",
+    "file": "drink_10.mp3"
+   }
+  ],
   "grunt": [
    {
     "text": "",
@@ -254,6 +296,32 @@
    {
     "text": "I meant to do that. Tremendous strategy.",
     "file": "recover_03.mp3"
+   }
+  ],
+  "resume": [
+   {
+    "text": "As I was SAYING...",
+    "file": "resume_01.mp3"
+   },
+   {
+    "text": "Excuse me, I was talking!",
+    "file": "resume_02.mp3"
+   },
+   {
+    "text": "Can I finish? CAN I FINISH?",
+    "file": "resume_03.mp3"
+   },
+   {
+    "text": "Rude. Very rude. Where was I?",
+    "file": "resume_04.mp3"
+   },
+   {
+    "text": "Nobody interrupts me. Nobody! Anyway...",
+    "file": "resume_05.mp3"
+   },
+   {
+    "text": "I'm going to start again. From the top.",
+    "file": "resume_06.mp3"
    }
   ],
   "taunt": [
