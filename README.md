@@ -34,4 +34,5 @@ Host the folder anywhere with HTTPS (GitHub Pages works). On a phone, open it an
 - **Recorded voice and sound effects**: 67 lines and 10 grunts in the ElevenLabs voice "Thumper" (`voice/`), plus 31 effect samples (`sfx/`), picked from three takes each. Synth sounds stay as a fallback. Regenerate with `tools/make-voice.mjs`.
 - Separate music and sound toggles; audio pauses when the app goes to the background
 
-Satire. He's a cartoon. Nobody real gets hurt.
+## Legal notes
+Parody and satire. Donald Thump is a cartoon caricature drawn in code; no photographs, footage or recordings of any real person were used. The voice is an original character created with ElevenLabs Voice Design from a text description (not a clone), on a plan with commercial rights. Not affiliated with or endorsed by anyone. Keep it that way: no real photos or audio, no voice cloning, no factual claims about real events, no likeness merch, and no "Trump" in product names, domains or ad keywords. Get a media/IP lawyer's review before charging money.

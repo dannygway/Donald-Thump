@@ -226,7 +226,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
         <div class="row" style="gap:8px"><span class="label">His voice</span>
           <div class="seg" id="voiceSeg"><button type="button" data-v="real" aria-pressed="false" hidden>Recorded</button><button type="button" data-v="mumble" aria-pressed="true">Mumble</button><button type="button" data-v="robot" aria-pressed="false">Robot</button></div>
         </div>
-        <span class="fine" id="lifeLine">Satire. He's a cartoon. Nobody real gets hurt.</span>
+        <span class="fine" id="lifeLine">Satire. A cartoon caricature, not affiliated with or endorsed by anyone. The voice is an original character.</span>
       </div>
     </div>
   </section>
@@ -242,7 +242,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
       <div class="news" id="news" hidden></div>
       <div class="label">He's already posting about you</div>
       <article class="post">
-        <div class="post-h"><canvas id="avatar" width="92" height="92"></canvas><div><b>Donald J. Thump<span class="badge" aria-hidden="true"></span></b><small>@RealDonaldThump · just now</small></div></div>
+        <div class="post-h"><canvas id="avatar" width="92" height="92"></canvas><div><b>Donald J. Thump<span class="badge" aria-hidden="true"></span></b><small>@NotRealDonaldThump · Parody account</small></div></div>
         <p id="rant"></p>
         <div class="post-f"><span id="pf1">41.2K ReThumps</span><span id="pf2">88K Likes</span><span>Posted from a golf buggy</span></div>
       </article>
@@ -2000,8 +2000,8 @@ function renderWeapons() {
     weaponsEl.appendChild(b);
   }
   $('lifeLine').textContent = life.thumps > 0
-    ? `Lifetime: ${life.thumps.toLocaleString()} thumps over ${life.sessions} round${life.sessions === 1 ? '' : 's'}. Satire, he's a cartoon.`
-    : "Satire. He's a cartoon. Nobody real gets hurt.";
+    ? `Lifetime: ${life.thumps.toLocaleString()} thumps over ${life.sessions} round${life.sessions === 1 ? '' : 's'}. Satire: not affiliated with or endorsed by anyone.`
+    : "Satire. A cartoon caricature, not affiliated with or endorsed by anyone. The voice is an original character.";
 }
 renderWeapons();
 
@@ -2238,7 +2238,7 @@ function writeRant(pct) {
 }
 
 $('copyBtn').addEventListener('click', async () => {
-  const txt = `${$('rant').textContent}\n— @RealDonaldThump`;
+  const txt = `${$('rant').textContent}\n— @NotRealDonaldThump (parody, from the Donald Thump game)`;
   const btn = $('copyBtn');
   try { await navigator.clipboard.writeText(txt); btn.textContent = 'Copied'; }
   catch (e) {
@@ -2282,13 +2282,13 @@ function renderCard() {
   x.fillStyle = '#fbfaf7'; x.beginPath(); x.roundRect ? x.roundRect(bx, by, bw, bh, 36) : x.rect(bx, by, bw, bh); x.fill();
   x.drawImage(faceShot, bx + 40, by + 40, 84, 84);
   x.fillStyle = '#14171c'; x.font = '700 38px system-ui,-apple-system,"Segoe UI",sans-serif'; x.fillText('Donald J. Thump', bx + 146, by + 78);
-  x.fillStyle = '#5d6675'; x.font = '400 30px system-ui,-apple-system,"Segoe UI",sans-serif'; x.fillText('@RealDonaldThump · just now', bx + 146, by + 118);
+  x.fillStyle = '#5d6675'; x.font = '400 30px system-ui,-apple-system,"Segoe UI",sans-serif'; x.fillText('@NotRealDonaldThump · Parody account', bx + 146, by + 118);
   x.fillStyle = '#14171c'; x.font = '400 36px system-ui,-apple-system,"Segoe UI",sans-serif';
   let lines = wrapText(x, $('rant').textContent, bw - 80);
   const maxL = 8; if (lines.length > maxL) { lines = lines.slice(0, maxL); lines[maxL - 1] = lines[maxL - 1].replace(/\s+\S*$/, '') + '…'; }
   lines.forEach((l, i) => x.fillText(l, bx + 40, by + 190 + i * 44));
   x.fillStyle = '#f5c044'; x.font = `400 40px ${disp}`; x.fillText('DONALD THUMP', 70, H2 - 62);
-  x.fillStyle = '#8392b8'; x.font = `600 28px ${cond}`; x.textAlign = 'right'; x.fillText('SATIRE · HE IS A CARTOON', W2 - 70, H2 - 66);
+  x.fillStyle = '#8392b8'; x.font = `600 28px ${cond}`; x.textAlign = 'right'; x.fillText('PARODY · NOT A REAL POST', W2 - 70, H2 - 66);
   return c;
 }
 // render the card when the end screen opens, so the Share tap can call
