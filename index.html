@@ -168,7 +168,13 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .dk{flex:1;max-width:240px;min-width:0;display:grid;gap:5px}
 #turnVal{font:400 26px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
 #pass{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);transform:translateX(-50%);background:var(--gold);color:var(--night);font:400 20px/1 var(--display);letter-spacing:.04em;padding:12px 20px 11px;border-radius:999px;box-shadow:0 5px 0 var(--gold-deep);pointer-events:none;white-space:nowrap;animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
-#penalty{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+#paywall .pen-band{background:var(--gold);color:var(--night)}
+#payH{margin:0;font:400 clamp(28px,8vw,36px)/1.05 var(--display);text-wrap:balance}
+#paywall p{margin:0;font:500 15px/1.45 var(--body);color:#2a3350}
+#paywall .fine{color:#5d6675;font-size:12.5px}
+#paywall .ghost{color:var(--night);border-color:rgba(10,17,40,.35);height:50px}
+#paywall .go[disabled]{opacity:.6}
+#penalty,#paywall{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
 .pen-in{width:100%;max-width:420px;background:var(--cream);color:var(--night);border-radius:20px;overflow:hidden;box-shadow:0 10px 0 rgba(0,0,0,.35);transform:rotate(-2deg);animation:slam .45s cubic-bezier(.2,1.4,.3,1) both}
 .pen-band{background:var(--red);color:var(--cream);padding:12px 20px 11px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .pen-band b{font:400 18px/1 var(--display);letter-spacing:.06em}
@@ -274,6 +280,19 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
   <div id="pass" hidden>Pass it on</div>
   <aside id="qrPanel" hidden aria-label="Play on your phone"><img id="qrImg" alt="QR code linking to this game"><b>Play on your phone</b><span>Point your camera here</span></aside>
 
+  <section id="paywall" hidden role="dialog" aria-modal="true" aria-labelledby="payH">
+    <div class="pen-in">
+      <div class="pen-band"><b>PAY UP!</b><span id="paySub">3 free used</span></div>
+      <div class="pen-body">
+        <h2 id="payH">Keep the night going.</h2>
+        <p>Unlimited drinking punishments, every night, unlocked on this phone for good. One of you pays, the whole room plays.</p>
+        <button id="payBtn" class="go" type="button">Unlock for 99p</button>
+        <button id="payLater" class="ghost" type="button">Not tonight</button>
+        <p class="fine" id="payNote">Secure checkout by Stripe. Already paid on this phone? It unlocks here automatically.</p>
+      </div>
+    </div>
+  </section>
+
   <section id="penalty" hidden role="dialog" aria-modal="true" aria-labelledby="penLine">
     <div class="pen-in">
       <div class="pen-band"><b>THUMP SAYS</b><span id="penSub">Turn 8</span></div>
@@ -293,6 +312,20 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 
 <script>
 'use strict';
+/* =========================================================================
+   PAYMENTS: fill these in to switch the drinking-game paywall on.
+   Leave the links empty and everything stays free.
+   Each Stripe Payment Link must redirect after payment to:
+     https://YOUR-DOMAIN/?paid={CHECKOUT_SESSION_ID}
+   verifyUrl points at functions/api/verify.js (Cloudflare Pages). Set it
+   to '' to trust the redirect alone (no server; easy to bypass).
+   ========================================================================= */
+const PAY = {
+  links: { p99: '', p199: '' },          // Stripe Payment Link URLs per price
+  labels: { p99: '99p', p199: '£1.99' }, // must match the prices in Stripe
+  verifyUrl: '/api/verify',
+  freePerNight: 3                        // free punishments per device per day
+};
 /* =========================================================================
    DONALD THUMP — everything here is drawn and synthesised in code.
    ========================================================================= */
@@ -1685,7 +1718,7 @@ const ptrs = new Map();
 let lastPtr = null;
 function turnLocked() {
   if (G.mode !== 'play' && G.mode !== 'title') return true;
-  return G.mode === 'play' && G.drink && (!penaltyEl.hidden || performance.now() < G.turnLock || ptrs.size > 0);
+  return G.mode === 'play' && G.drink && (!penaltyEl.hidden || !paywallEl.hidden || performance.now() < G.turnLock || ptrs.size > 0);
 }
 cv.addEventListener('pointerdown', e => {
   au();
@@ -2071,7 +2104,7 @@ function clearRound() {
   for (const p of ptrs.values()) if (p.charging) SFX.chargeStop();
   ptrs.clear();
   G.resumeAt = 0; G.hitStop = 0; G.combo = 0;
-  penaltyEl.hidden = true; passEl.hidden = true; setInert(false);
+  penaltyEl.hidden = true; passEl.hidden = true; paywallEl.hidden = true; clearInterval(payPoll); setInert(false);
 }
 function startGame() {
   au();
@@ -2118,6 +2151,10 @@ function endTurn(p, landed) {
 function setInert(on) { for (const el of [hud, cv, hint]) { try { el.inert = on; } catch (e) {} } }
 function punish(p, landed) {
   if (G.mode !== 'play') return;
+  if (paywallOn()) {
+    if (freeLeft() <= 0) { G.sinceDrink = 0; showPaywall(); return; }
+    useFree();
+  }
   const D = LINES.drink;
   const w = D.map((txt, i) => {
     if (txt === G.lastDrink) return 0;
@@ -2142,6 +2179,71 @@ function punish(p, landed) {
   setTimeout(() => $('penDone').focus(), 50);
   hudTick(true);
 }
+/* -------------------------------------------------------------- paywall
+   Device-level unlock. The checkout opens in a new tab carrying this
+   device's reference; the game polls the verify endpoint so it unlocks
+   even when payment happens in a different browser context (e.g. an
+   installed iPhone app handing off to Safari). */
+const paywallEl = $('paywall');
+const isPaid = () => store.get('paid', false) === true;
+const deviceRef = store.get('ref', null) || (() => { const r = (Math.random().toString(36).slice(2, 10) + Date.now().toString(36)).replace(/[^a-z0-9]/g, ''); store.set('ref', r); return r; })();
+const priceVariant = (() => { let v = store.get('pv', null); if (v !== 'p99' && v !== 'p199') { v = Math.random() < 0.5 ? 'p99' : 'p199'; store.set('pv', v); } return v; })();
+const payLink = () => PAY.links[priceVariant] || PAY.links.p99 || PAY.links.p199 || '';
+const paywallOn = () => !!payLink() && !isPaid();
+const today = () => new Date().toDateString();
+function freeLeft() { const f = store.get('free', null); return !f || f.d !== today() ? PAY.freePerNight : Math.max(0, PAY.freePerNight - f.n); }
+function useFree() { const f = store.get('free', null); store.set('free', { d: today(), n: (!f || f.d !== today() ? 0 : f.n) + 1 }); }
+let payPoll = 0;
+function showPaywall() {
+  passEl.hidden = true;
+  const label = PAY.labels[PAY.links[priceVariant] ? priceVariant : (PAY.links.p99 ? 'p99' : 'p199')];
+  $('payBtn').textContent = `Unlock for ${label}`; $('payBtn').disabled = false;
+  $('paySub').textContent = `${PAY.freePerNight} free used tonight`;
+  paywallEl.hidden = false; setInert(true);
+  try { if (navigator.vibrate) navigator.vibrate([40, 30, 40]); } catch (e) {}
+  setTimeout(() => $('payBtn').focus(), 50);
+}
+function closePaywall() {
+  paywallEl.hidden = true; setInert(false);
+  G.turnLock = performance.now() + 250;
+}
+async function checkPaid(q) {
+  if (!PAY.verifyUrl) return false;
+  try { const r = await fetch(`${PAY.verifyUrl}?${q}`, { cache: 'no-store' }); const d = await r.json(); return d && d.paid === true; } catch (e) { return false; }
+}
+function markPaid() {
+  if (isPaid()) return;
+  store.set('paid', true);
+  clearInterval(payPoll);
+  if (!paywallEl.hidden) closePaywall();
+  passEl.textContent = 'Unlocked. Drinks are on him.'; passEl.hidden = false;
+  clearTimeout(passTimer); passTimer = setTimeout(() => { passEl.hidden = true; passEl.textContent = 'Pass it on'; }, 2600);
+}
+$('payBtn').addEventListener('click', () => {
+  const url = payLink(); if (!url) return;
+  const a = document.createElement('a');
+  a.href = url + (url.includes('?') ? '&' : '?') + 'client_reference_id=' + deviceRef;
+  a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+  $('payBtn').textContent = 'Waiting for payment…'; $('payBtn').disabled = true;
+  $('payNote').textContent = 'Finish checking out in the tab that opened. This screen unlocks by itself.';
+  clearInterval(payPoll);
+  const t0 = Date.now();
+  payPoll = setInterval(async () => {
+    if (Date.now() - t0 > 15 * 60 * 1000) { clearInterval(payPoll); return; }
+    if (isPaid() || await checkPaid('ref=' + deviceRef)) markPaid();
+  }, 3000);
+});
+$('payLater').addEventListener('click', () => { clearInterval(payPoll); closePaywall(); });
+// another tab on this device finished checkout
+window.addEventListener('storage', e => { if (e.key === 'thump.paid' && e.newValue === 'true') markPaid(); });
+// returning from Stripe: ?paid={CHECKOUT_SESSION_ID} (after the rest of the UI is set up)
+setTimeout(async () => {
+  let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+  const sid = q.get('paid'); if (!sid) return;
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+  if (!PAY.verifyUrl || await checkPaid('session=' + encodeURIComponent(sid))) { markPaid(); setGameMode('drink'); }
+}, 0);
+
 $('penDone').addEventListener('click', () => {
   penaltyEl.hidden = true; setInert(false);
   G.turnLock = performance.now() + 250;
@@ -2332,6 +2434,7 @@ window.addEventListener('keydown', e => {
   if (e.key !== 'Escape' && e.key !== 'Enter') return;
   if (!$('card').hidden && e.key === 'Escape') { $('card').hidden = true; $('cardBtn').focus(); }
   else if (!penaltyEl.hidden) { e.preventDefault(); $('penDone').click(); }
+  else if (!paywallEl.hidden && e.key === 'Escape') { $('payLater').click(); }
 });
 $('cardClose').addEventListener('click', () => { $('card').hidden = true; });
 

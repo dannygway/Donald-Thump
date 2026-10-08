@@ -42,5 +42,16 @@ None of this shows once it's running from the home screen, or when embedded in a
 - **Recorded voice and sound effects**: 67 lines and 10 grunts in the ElevenLabs voice "Thumper" (`voice/`), plus 31 effect samples (`sfx/`), picked from three takes each. Synth sounds stay as a fallback. Regenerate with `tools/make-voice.mjs`.
 - Separate music and sound toggles; audio pauses when the app goes to the background
 
+## Payments (drinking-game paywall)
+3 free punishments per device per night, then a card offers a one-off unlock for that phone. Two prices are split-tested (half of devices see 99p, half £1.99). With no payment links set, everything stays free.
+
+**Setup**
+1. Stripe: create a product with two one-off prices (99p and £1.99) and a **Payment Link** for each. In each link's settings choose *After payment → Don't show confirmation page → Redirect* to `https://YOUR-DOMAIN/?paid={CHECKOUT_SESSION_ID}`.
+2. Paste both link URLs into `PAY.links` at the top of the script in `index.html` (keep `PAY.labels` matching the real prices).
+3. Host on **Cloudflare Pages** (the `functions/` folder becomes `/api/verify`). In the project's environment variables add `STRIPE_SECRET_KEY` (a *restricted* key with read access to Checkout Sessions) and optionally `PAYMENT_LINKS` (the `plink_...` ids).
+4. Test with Stripe test-mode links and card 4242 4242 4242 4242 before switching to live links.
+
+How it unlocks: checkout opens in a new tab carrying the device's reference (`client_reference_id`); the game polls `/api/verify` and unlocks itself, which also covers installed iPhone apps that hand payment to Safari. Returning via the redirect unlocks too. Unlocks are per device; there's no account to restore from on a new phone.
+
 ## Legal notes
 Parody and satire. Donald Thump is a cartoon caricature drawn in code; no photographs, footage or recordings of any real person were used. The voice is an original character created with ElevenLabs Voice Design from a text description (not a clone), on a plan with commercial rights. Not affiliated with or endorsed by anyone. Keep it that way: no real photos or audio, no voice cloning, no factual claims about real events, no likeness merch, and no "Trump" in product names, domains or ad keywords. Get a media/IP lawyer's review before charging money.
