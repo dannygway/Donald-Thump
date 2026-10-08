@@ -2328,32 +2328,105 @@ function showEnd() {
 }
 
 const faceShot = document.createElement('canvas'); faceShot.width = faceShot.height = 600;
+// Persistent shuffle bags: a format, opener or sign-off doesn't come back
+// until the rest have been used, even across visits.
+function pbag(key, n) {
+  let bag = store.get('bag.' + key, null);
+  if (!Array.isArray(bag) || !bag.length || bag.some(i => i >= n)) {
+    bag = [...Array(n).keys()].sort(() => Math.random() - 0.5);
+    const last = store.get('bagl.' + key, -1);
+    if (bag.length > 1 && bag[0] === last) bag.push(bag.shift());
+  }
+  const i = bag.shift();
+  store.set('bag.' + key, bag); store.set('bagl.' + key, i);
+  return i;
+}
+const pp = (key, arr) => arr[pbag(key, arr.length)];
+const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
+
 function writeRant(pct) {
-  const h = G.hits;
-  if (!h) return pick([
-    `Somebody opened my app and didn't even throw ONE punch. Couldn't do it. Too scared. Total chicken. I respect it, frankly.`,
-    `Zero punches. ZERO. They took one look at this beautiful face and gave up. Smart. Very smart person!`
+  const h = G.hits, hl = G.hairLifts, cuts = G.cuts, combo = G.bestCombo, drinks = G.drinks || 0;
+  const bigs = (G.big * 10).toFixed(1), big = G.big * 10;
+  const secs = Math.max(1, Math.round(performance.now() / 1000 - G.t0)), mins = Math.max(1, Math.round(secs / 60));
+  const hr = new Date().getHours(), day = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
+  const wname = { chicken: 'rubber chicken', fish: 'wet fish', gold: 'golden glove' }[weapon];
+
+  if (!h) return pp('zero', [
+    `Somebody opened my app and didn't throw ONE punch. Too scared. Total chicken. I respect it, frankly.`,
+    `Zero punches. ZERO. They took one look at this beautiful face and gave up. Smart person!`,
+    `A user came, saw my face, and left. Overwhelmed. Happens a lot. It's the charisma.`,
+    `They pressed "I'm done" without punching. Best decision of their life. Very smart!`
   ]);
-  const lines = [];
-  lines.push(pick([
-    `Just got punched ${h} ${h === 1 ? 'time' : 'times'} by a VERY angry person. Probably on the toilet. Total loser!`,
-    `A hater, a real nobody, just hit my BEAUTIFUL face ${h} ${h === 1 ? 'time' : 'times'}. Didn't hurt. Not even a little!`,
-    `${h} "${h === 1 ? 'punch' : 'punches'}" from a sad, sad individual who clearly needs a hobby. I'm the hobby. Unfair!`
-  ]));
-  if (G.big > 0.85) lines.push(`Their biggest one was a ${(G.big * 10).toFixed(1)}. I've been hit harder by a cheeseburger.`);
-  else lines.push(`Their hardest punch was a pathetic ${(G.big * 10).toFixed(1)} out of 10. LOW ENERGY!`);
-  if (G.hairLifts > 0) lines.push(`They touched THE HAIR ${G.hairLifts} time${G.hairLifts > 1 ? 's' : ''}. Nobody touches the hair. NOBODY!`);
-  else lines.push(`Couldn't even touch the hair. Couldn't do it! The hair is a fortress.`);
-  if (G.cuts > 2) lines.push(`Rudely interrupted me ${G.cuts} times while I was making very important points.`);
-  if (G.teeth) lines.push(`Also I lost a tooth. It was my favourite tooth. Witch hunt!`);
-  if (weapon === 'chicken') lines.push(`They hit me with a RUBBER CHICKEN. Very disrespectful to the office!`);
-  if (weapon === 'fish') lines.push(`Slapped with a fish. A wet FISH. Who does that?`);
-  if (weapon === 'gold') lines.push(`Even the glove was gold. Nice glove. Probably stole it from me.`);
-  if (G.dazes) lines.push(`I did NOT see any birds. Fake news!`);
-  if (G.drink) lines.push(`A whole GROUP of drunk people took turns. I made them drink ${G.drinks} times. I'm the best host, everybody says so!`);
-  else lines.push(pct > 0 ? `Now they say they're "${pct}% calmer." Very suspicious number!` : `And they're STILL angry. Sad!`);
-  lines.push(pick(['SAD!', 'TOTAL DISGRACE!', 'See you in court!', 'Many people are saying it!', 'RIGGED!']));
-  return lines.join(' ');
+
+  // details that only appear when they fit what happened
+  const det = [];
+  if (big >= 9) det.push(pp('d.bigHi', [`One punch was a ${bigs}/10. Suspicious. I want it investigated!`, `They hit a ${bigs}. Nobody hits that hard unless they're cheating!`, `A ${bigs} out of 10?? I've seen the replay. RIGGED!`]));
+  else if (big < 5) det.push(pp('d.bigLo', [`Hardest punch: ${bigs}/10. A baby punches harder. A small baby!`, `Their best was a ${bigs}. I've had stronger handshakes.`, `${bigs} out of 10. LOW ENERGY!`]));
+  else det.push(pp('d.bigMid', [`Their best shot was a ${bigs}. Average. Very average person.`, `A ${bigs} out of 10, and they think they're a fighter. Sad!`, `Best punch ${bigs}/10. I'd give it a 2.`]));
+  if (hl > 0) det.push(pp('d.hair', [`They touched THE HAIR ${plural(hl, 'time')}. Nobody touches the hair!`, `The hair flew up ${plural(hl, 'time')} and landed perfectly. Perfect hair!`, `Hair incidents: ${hl}. My hair people are furious. FURIOUS!`]));
+  else if (Math.random() < 0.4) det.push(pp('d.nohair', [`Couldn't even touch the hair. The hair is a fortress.`, `Not one hair out of place. Tremendous hair.`]));
+  if (cuts >= 3) det.push(pp('d.cuts', [`Interrupted me ${cuts} times. I was making beautiful points!`, `${cuts} times they cut me off mid-sentence. The rudest person I've ever met.`, `I tried to speak ${cuts} times. Silenced! Total censorship!`]));
+  if (G.teeth) det.push(pp('d.tooth', [`I lost a tooth. A great tooth. One of the best teeth.`, `They knocked out my tooth. My dentist says it was the best tooth he's ever seen.`]));
+  if (G.dazes) det.push(pp('d.daze', [`For the record, I did NOT see any birds. Fake birds!`, `I wasn't dizzy. I was resting my eyes. Strategically.`, `Those were NOT stars. I know stars. I AM a star.`]));
+  if (combo >= 12) det.push(pp('d.combo', [`${combo} punches in a row. That's not boxing, that's harassment!`, `A ${combo}-hit combo?? Get a job!`]));
+  if (wname) det.push(pp('d.' + weapon, {
+    chicken: [`They hit me with a RUBBER CHICKEN. Very disrespectful to the office!`, `A rubber chicken. A CHICKEN. I've never been so insulted, and I've been insulted a lot.`],
+    fish: [`Slapped with a wet fish. A FISH. Who even has a fish?`, `I smell like fish now. Thanks a lot!`],
+    gold: [`Even the glove was gold. Nice glove. Probably stole it from me.`, `A golden glove. Very classy. They have my taste, at least.`]
+  }[weapon]));
+  if (secs < 25) det.push(pp('d.short', [`They left after ${secs} seconds. Couldn't handle me. Nobody can.`, `${secs} seconds. That's all they lasted. WEAK!`]));
+  if (secs > 180) det.push(pp('d.long', [`${mins} minutes of punching me. Obsessed. They're obsessed with me.`, `They spent ${mins} whole minutes on me. Biggest fan, frankly.`]));
+  if (life.sessions >= 4) det.push(pp('d.back', [`That's visit number ${life.sessions}. They keep coming back. They love me!`, `Round ${life.sessions}. Same angry person. Get a hobby!`]));
+  if (hr < 5) det.push(pp('d.night', [`It's ${hr || 12} in the morning and somebody is PUNCHING me. Go to bed!`, `Punched in the middle of the night. Who does that? Insomniacs!`]));
+  else if (hr < 9) det.push(`Punched before breakfast. Before BREAKFAST!`);
+  if (G.drink) det.push(pp('d.drink', [`They turned me into a drinking game. I made them drink ${plural(drinks, 'time')}. Best host ever!`, `${plural(drinks, 'drink')} handed out. I'm a great bartender, everybody says so.`]));
+  else if (pct >= 60) det.push(pp('d.calm', [`Now they're "${pct}% calmer". Because of ME. You're welcome!`, `${pct}% calmer, they say. I did that. I should get a prize.`]));
+  else if (pct < 15) det.push(pp('d.angry', [`And they're STILL angry. That's not my fault!`, `Still furious after all that. Some people can't be helped. Sad!`]));
+  det.sort(() => Math.random() - 0.5);
+  const d1 = det[0] || '', d2 = det[1] || '';
+
+  const sign = () => pp('sign', ['SAD!', 'TOTAL DISGRACE!', 'See you in court!', 'Many people are saying it!', 'RIGGED!',
+    'Thank you for your attention to this matter!', 'LOW ENERGY!', 'Not nice!', 'Witch hunt!', 'Very unfair!',
+    'I WON.', 'Believe me.', 'Pathetic!', 'Get a life!', 'Enjoy!']);
+  const tip = () => pp('tip', ['punch harder', 'hold your finger down for the big one. I invented that', 'swing UP at the chin, much better',
+    "try a fish. Just kidding, don't", 'stretch first, you looked very stiff']);
+
+  const formats = {
+    classic: () => [pp('open', [
+      `Just got punched ${plural(h, 'time')} by a VERY angry person. Probably on the toilet.`,
+      `A hater, a real nobody, just hit my BEAUTIFUL face ${plural(h, 'time')}.`,
+      `${h} "${h === 1 ? 'punch' : 'punches'}" from a sad individual who needs a hobby. I'm the hobby.`,
+      `Another so-called "user" attacked my face today. ${plural(h, 'time')}. Didn't hurt!`,
+      `${plural(h, 'punch', 'punches')}. On a ${day}! Disgraceful.`,
+      `Somebody hit me ${plural(h, 'time')} and called it "stress relief". It's called cartoon ASSAULT!`,
+      `They say I got punched ${plural(h, 'time')}. The real number is much lower. Fake numbers!`
+    ]), d1, d2, sign()],
+    statement: () => [`STATEMENT FROM DONALD J. THUMP: Today I was attacked ${plural(h, 'time')} by a hater with a phone.`, d1, `I have done nothing wrong. Thank you for your attention to this matter!`],
+    list: () => {
+      const facts = [`${plural(h, 'punch', 'punches')}, all weak`];
+      if (hl) facts.push(`hair touched ${hl}x (illegal)`);
+      facts.push(`best hit ${bigs}/10 (rigged)`);
+      if (cuts >= 3) facts.push(`interrupted ${cuts}x`);
+      if (wname) facts.push(`attacked with a ${wname}`);
+      if (G.drink) facts.push(`${plural(drinks, 'drink')} ordered by me`);
+      const f = facts.slice(0, 3);
+      return [`Things that happened today: ${f.map((x, i) => `${i + 1}) ${x[0].toUpperCase() + x.slice(1)}.`).join(' ')} ${f.length + 1}) I won. Again.`];
+    },
+    brag: () => [`Record numbers today! ${plural(h, 'punch', 'punches')}, the biggest crowd in the history of punching.`, d1, `Tremendous ratings. Nobody's ever seen numbers like it!`],
+    thanks: () => [`I want to thank the very angry person who punched me ${plural(h, 'time')}. Not a nice person.`, d1, `But I'm very generous, so here's a free tip: ${tip()}.`],
+    short: () => [`${plural(h, 'PUNCH', 'PUNCHES')}. I COUNTED. ${pp('shout', ['WEAK!!!', 'NOT EVEN CLOSE!!!', 'I FELT NOTHING!!!', 'IS THAT IT???'])}`, d1],
+    correction: () => [hl ? `CORRECTION: Earlier I said nobody touched the hair. Somebody touched the hair. ${plural(hl, 'time')}. We are looking into it very strongly.`
+      : `CORRECTION: Earlier I said I saw no birds. I saw ONE bird. It was a very small bird. Total non-event!`, sign()],
+    lawyers: () => [`My lawyers, the best lawyers, are reviewing the ${plural(h, 'punch', 'punches')} I took today.`, d1, `See you in court, angry phone person!`],
+    party: () => [`PARTY REPORT: ${plural(G.turn || h, 'punch', 'punches')}, ${plural(drinks, 'drink')}, all because of ME.`, d1, pp('partyEnd', [`Best party of the year. Maybe ever!`, `You're welcome. Drink water. I'm very responsible.`, `Same time next week? I'll be here. Looking great.`])]
+  };
+  // one shared rotation over every format; skip the ones that don't fit this round
+  const ALL = ['classic', 'statement', 'list', 'brag', 'thanks', 'short', 'lawyers', 'correction', 'party'];
+  const fits = k => (k !== 'correction' || hl || G.dazes) && (k !== 'party' || G.drink);
+  let fmt = G.drink && Math.random() < 0.35 ? 'party' : null;
+  for (let i = 0; !fmt && i < ALL.length * 2; i++) { const k = ALL[pbag('fmt', ALL.length)]; if (fits(k)) fmt = k; }
+  fmt = fmt || 'classic';
+  return formats[fmt]().filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }
 
 $('copyBtn').addEventListener('click', async () => {

@@ -48,7 +48,9 @@ None of this shows once it's running from the home screen, or when embedded in a
 **Setup**
 1. Stripe: create a product with two one-off prices (99p and £1.99) and a **Payment Link** for each. In each link's settings choose *After payment → Don't show confirmation page → Redirect* to `https://YOUR-DOMAIN/?paid={CHECKOUT_SESSION_ID}`.
 2. Paste both link URLs into `PAY.links` at the top of the script in `index.html` (keep `PAY.labels` matching the real prices).
-3. Host on **Cloudflare Pages** (the `functions/` folder becomes `/api/verify`). In the project's environment variables add `STRIPE_SECRET_KEY` (a *restricted* key with read access to Checkout Sessions) and optionally `PAYMENT_LINKS` (the `plink_...` ids).
+3. Host it (either works):
+   - **Railway**: deploy the repo; it runs `npm start` (`server.js`, no dependencies) which serves the game and `/api/verify`. Add variables `STRIPE_SECRET_KEY` (a *restricted* key with read access to Checkout Sessions) and optionally `PAYMENT_LINKS` (the `plink_...` ids), then attach your domain.
+   - **Cloudflare Pages** (free): deploy the repo with no build step; the `functions/` folder becomes `/api/verify`. Add the same variables in the project settings.
 4. Test with Stripe test-mode links and card 4242 4242 4242 4242 before switching to live links.
 
 How it unlocks: checkout opens in a new tab carrying the device's reference (`client_reference_id`); the game polls `/api/verify` and unlocks itself, which also covers installed iPhone apps that hand payment to Safari. Returning via the redirect unlocks too. Unlocks are per device; there's no account to restore from on a new phone.
