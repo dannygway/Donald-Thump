@@ -1,6 +1,6 @@
 # Recorded voice
 
-Drop-in folder for real voice clips. When `voice/manifest.json` exists, the app adds a **Recorded** option to "His voice" and plays these clips instead of the synthesised mumble. Clips get cut off mid-word when you punch him, the same as the mumble, and his mouth moves to the audio's volume.
+Drop-in folder for real voice clips. When `voice/manifest.json` exists, the app plays these clips as his voice. The synthesised mumble is only a fallback for while they load or if they fail. Clips get cut off mid-word when you punch him, the same as the mumble, and his mouth moves to the audio's volume.
 
 ## Generate with ElevenLabs
 1. Make or pick a voice in ElevenLabs and copy its Voice ID.

@@ -1,5 +1,5 @@
 // Offline support for the installed app. Bump VERSION when shipping changes.
-const VERSION = 'thump-v9';
+const VERSION = 'thump-v10';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-180.png'];
 
 self.addEventListener('install', e => {

@@ -31,7 +31,7 @@ None of this shows once it's running from the home screen, or when embedded in a
 - **Soft-body face**: the whole head is drawn through a 13×15 spring lattice, so hits dent, smear and wobble it
 - **Combover physics**: the hair is hinged. Hit it hard enough and it lifts like a car bonnet to show the bald dome underneath
 - **Persistent damage**: bruises, black eyes, a swelling red nose, fat lip, forehead lump, wiped-off fake tan, lost tooth, and bandages after he recovers from a daze
-- **He talks back**: parody lines in a synthesised mumble voice (or the device's text-to-speech). Punch him mid-sentence and the line gets cut off.
+- **He talks back**: recorded lines in one original character voice. Punch him mid-sentence and the line gets cut off. (A synth mumble only fills in if the clips can't load.)
 - **Blood pressure meter**: your stress shown in mmHg with real AHA categories. Each punch brings it down.
 - **Adaptive music**: one generative loop that moves from fast and aggressive to slow lo-fi as you calm down
 - **He reacts to *that* punch**: light hits get dismissive bluster, big ones get "Okay, that one hurt". Lines come from a shuffled bag so none repeat until the set is used up. Grunts climb in pitch and volume through a flurry. Cut him off and he sometimes tries again ("As I was SAYING...").
