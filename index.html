@@ -1177,6 +1177,25 @@ function playSample(key, vol = 1, vary = true) {
   src.connect(g); g.connect(AU.sfx); src.start();
   return src;
 }
+// The haymaker samples are almost all sub-bass (a dull "whumpf"), so the big
+// punch is layered like a film hit: a bright crack on the transient, the
+// meaty hook impact for body, then the boom underneath as support.
+function haymakerHit(p) {
+  const c = AU.ctx; if (!c || !SAMPLES.map) return false;
+  const t = c.currentTime;
+  const crack = playSample('hook', 0.95 + 0.25 * p, false);
+  if (!crack) return false;
+  crack.playbackRate.value = 0.94;
+  setTimeout(() => { const j = playSample('jab', 0.7, false); if (j) j.playbackRate.value = 0.82; }, 8);
+  setTimeout(() => { playSample('haymaker', 0.5 + 0.2 * p, false); }, 22);
+  // synth transient: a short bright snap so it cuts through a noisy room
+  nz(c, t, 0.045, 0.55 * p + 0.25, AU.sfx, 'highpass', 2800, 0.7, 0.001);
+  nz(c, t + 0.004, 0.09, 0.35, AU.sfx, 'bandpass', 1300, 1.2, 0.002, 500);
+  // a tight low punch (not a long boom): fast pitch drop, short decay
+  osc(c, 'sine', 120, t, 0.16, 0.7, AU.sfx, 0.002, 48, 0.09);
+  setTimeout(() => playSample('wobble', 0.75 * p), 60);
+  return true;
+}
 const SAMPLE_KEY = {
   thump: (p, kind) => ({ hook: 'hook', chop: 'hook', upper: 'upper', hay: 'haymaker', body: 'body' })[kind] || 'jab',
   whoosh: () => 'whoosh', miss: () => 'miss', bell: () => 'bell', flap: () => 'hairflap', tink: () => 'tooth',
@@ -1186,6 +1205,7 @@ for (const [name, keyFn] of Object.entries(SAMPLE_KEY)) {
   const synth = SFX[name];
   SFX[name] = (...a) => {
     const p = (name === 'thump' || name === 'whoosh') && typeof a[0] === 'number' ? a[0] : 1;
+    if (name === 'thump' && a[1] === 'hay' && haymakerHit(p)) return;
     if (playSample(keyFn(...a), name === 'thump' ? 0.55 + 0.5 * p : name === 'whoosh' ? 0.4 + 0.5 * p : 1, name !== 'bell' && name !== 'calm')) {
       if (name === 'thump' && p > 0.45) setTimeout(() => playSample('wobble', 0.6 * p), 40);
       return;
