@@ -1,13 +1,14 @@
 // Minimal production server for hosts like Railway: serves the game's static
 // files and the /api/verify payment check. No dependencies; Node 18+.
 //   PORT               set by the host
-//   STRIPE_SECRET_KEY  restricted Stripe key (read Checkout Sessions)
+//   STRIPE_SECRET_KEY  restricted Stripe key (Checkout Sessions read + write)
 //   PAYMENT_LINKS      optional comma-separated plink_... ids
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onRequestGet as verify } from './functions/api/verify.js';
+import { onRequestGet as checkout } from './functions/api/checkout.js';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 // only these are public; everything else in the repo (tools, functions, .git) is not
@@ -23,9 +24,12 @@ const SECURITY = {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    if (url.pathname === '/api/verify') {
+    const api = { '/api/verify': verify, '/api/checkout': checkout }[url.pathname];
+    if (api) {
       if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
-      const r = await verify({ request: new Request(url), env: process.env });
+      const headers = new Headers();
+      for (const k of ['x-forwarded-host', 'x-forwarded-proto']) if (req.headers[k]) headers.set(k, String(req.headers[k]).split(',')[0].trim());
+      const r = await api({ request: new Request(url, { headers }), env: process.env });
       res.writeHead(r.status, { ...SECURITY, ...Object.fromEntries(r.headers) });
       return res.end(await r.text());
     }

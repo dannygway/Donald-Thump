@@ -313,17 +313,15 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 <script>
 'use strict';
 /* =========================================================================
-   PAYMENTS: fill these in to switch the drinking-game paywall on.
-   Leave the links empty and everything stays free.
-   Each Stripe Payment Link must redirect after payment to:
-     https://YOUR-DOMAIN/?paid={CHECKOUT_SESSION_ID}
-   verifyUrl points at functions/api/verify.js (Cloudflare Pages). Set it
-   to '' to trust the redirect alone (no server; easy to bypass).
+   PAYMENTS: the paywall switches itself on when the server answers
+   /api/verify?ping=1 with {configured:true} (STRIPE_SECRET_KEY is set).
+   Anywhere else (local file, preview, no key) the game stays free.
+   Prices live on the server (functions/api/checkout.js); labels must match.
    ========================================================================= */
 const PAY = {
-  links: { p99: '', p199: '' },          // Stripe Payment Link URLs per price
-  labels: { p99: '99p', p199: '£1.99' }, // must match the prices in Stripe
+  checkoutUrl: '/api/checkout',
   verifyUrl: '/api/verify',
+  labels: { p99: '99p', p199: '£1.99' },
   freePerNight: 3                        // free punishments per device per day
 };
 /* =========================================================================
@@ -2188,16 +2186,19 @@ const paywallEl = $('paywall');
 const isPaid = () => store.get('paid', false) === true;
 const deviceRef = store.get('ref', null) || (() => { const r = (Math.random().toString(36).slice(2, 10) + Date.now().toString(36)).replace(/[^a-z0-9]/g, ''); store.set('ref', r); return r; })();
 const priceVariant = (() => { let v = store.get('pv', null); if (v !== 'p99' && v !== 'p199') { v = Math.random() < 0.5 ? 'p99' : 'p199'; store.set('pv', v); } return v; })();
-const payLink = () => PAY.links[priceVariant] || PAY.links.p99 || PAY.links.p199 || '';
-const paywallOn = () => !!payLink() && !isPaid();
+let payReady = false;   // set once the server confirms payments are configured
+(async () => {
+  if (!/^https?:/.test(location.protocol)) return;
+  try { const r = await fetch(PAY.verifyUrl + '?ping=1', { cache: 'no-store' }); const d = await r.json(); payReady = !!(d && d.configured); } catch (e) {}
+})();
+const paywallOn = () => payReady && !isPaid();
 const today = () => new Date().toDateString();
 function freeLeft() { const f = store.get('free', null); return !f || f.d !== today() ? PAY.freePerNight : Math.max(0, PAY.freePerNight - f.n); }
 function useFree() { const f = store.get('free', null); store.set('free', { d: today(), n: (!f || f.d !== today() ? 0 : f.n) + 1 }); }
 let payPoll = 0;
 function showPaywall() {
   passEl.hidden = true;
-  const label = PAY.labels[PAY.links[priceVariant] ? priceVariant : (PAY.links.p99 ? 'p99' : 'p199')];
-  $('payBtn').textContent = `Unlock for ${label}`; $('payBtn').disabled = false;
+  $('payBtn').textContent = `Unlock for ${PAY.labels[priceVariant]}`; $('payBtn').disabled = false;
   $('paySub').textContent = `${PAY.freePerNight} free used tonight`;
   paywallEl.hidden = false; setInert(true);
   try { if (navigator.vibrate) navigator.vibrate([40, 30, 40]); } catch (e) {}
@@ -2220,9 +2221,8 @@ function markPaid() {
   clearTimeout(passTimer); passTimer = setTimeout(() => { passEl.hidden = true; passEl.textContent = 'Pass it on'; }, 2600);
 }
 $('payBtn').addEventListener('click', () => {
-  const url = payLink(); if (!url) return;
   const a = document.createElement('a');
-  a.href = url + (url.includes('?') ? '&' : '?') + 'client_reference_id=' + deviceRef;
+  a.href = `${PAY.checkoutUrl}?v=${priceVariant}&ref=${deviceRef}`;
   a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
   $('payBtn').textContent = 'Waiting for payment…'; $('payBtn').disabled = true;
   $('payNote').textContent = 'Finish checking out in the tab that opened. This screen unlocks by itself.';
