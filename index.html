@@ -130,6 +130,20 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .news{display:grid;gap:6px}
 .news p{margin:0;font:600 15px/1.3 var(--cond);letter-spacing:.04em;color:var(--cream)}
 .news p b{color:var(--gold);font-weight:700}
+.install{background:rgba(22,36,74,.85);border:1.5px solid rgba(245,192,68,.45);border-radius:16px;padding:14px 14px 12px;display:grid;gap:10px}
+.install h3{margin:0;font:400 19px/1.1 var(--display);color:var(--gold)}
+.install p{margin:0;font:500 14.5px/1.4 var(--body);color:#cdd6ee}
+.install ol{margin:0;padding-left:20px;display:grid;gap:6px;font:500 14.5px/1.35 var(--body);color:var(--cream)}
+.install ol svg{width:17px;height:17px;vertical-align:-3px;margin:0 2px}
+.install .row{gap:8px;justify-content:flex-start}
+.install .go{height:48px;font-size:16px;padding:0 18px;flex:1}
+.install .ghost{height:48px;font-size:13px;padding:0 14px}
+.tiny-link{border:0;background:none;padding:0;color:var(--gold);font:700 12px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+#qrPanel{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:var(--cream);color:var(--night);border-radius:16px;padding:12px 12px 10px;display:grid;gap:6px;justify-items:center;box-shadow:0 6px 0 rgba(0,0,0,.3);width:150px}
+#qrPanel img{width:126px;height:126px;image-rendering:pixelated}
+#qrPanel b{font:400 14px/1.1 var(--display);text-align:center}
+#qrPanel span{font:600 11px/1.2 var(--cond);letter-spacing:.08em;text-transform:uppercase;color:#5d6675;text-align:center}
+@media (max-width:1100px){#qrPanel{display:none}}
 .btns .wide{grid-column:1/-1}
 #hint #hintText{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
 @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
@@ -226,6 +240,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
         <div class="row" style="gap:8px"><span class="label">His voice</span>
           <div class="seg" id="voiceSeg"><button type="button" data-v="real" aria-pressed="false" hidden>Recorded</button><button type="button" data-v="mumble" aria-pressed="true">Mumble</button><button type="button" data-v="robot" aria-pressed="false">Robot</button></div>
         </div>
+        <button type="button" class="tiny-link" id="installLink" hidden>Get it on your home screen</button>
         <span class="fine" id="lifeLine">Satire. A cartoon caricature, not affiliated with or endorsed by anyone. The voice is an original character.</span>
       </div>
     </div>
@@ -240,6 +255,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
       </div>
       <div class="stats" id="stats"></div>
       <div class="news" id="news" hidden></div>
+      <div class="install" id="install" hidden aria-live="polite"></div>
       <div class="label">He's already posting about you</div>
       <article class="post">
         <div class="post-h"><canvas id="avatar" width="92" height="92"></canvas><div><b>Donald J. Thump<span class="badge" aria-hidden="true"></span></b><small>@NotRealDonaldThump · Parody account</small></div></div>
@@ -255,6 +271,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
   </section>
 
   <div id="pass" hidden>Pass it on</div>
+  <aside id="qrPanel" hidden aria-label="Play on your phone"><img id="qrImg" alt="QR code linking to this game"><b>Play on your phone</b><span>Point your camera here</span></aside>
 
   <section id="penalty" hidden role="dialog" aria-modal="true" aria-labelledby="penLine">
     <div class="pen-in">
@@ -2205,6 +2222,8 @@ function showEnd() {
     const a = $('avatar').getContext('2d'); a.clearRect(0, 0, 92, 92); a.drawImage(faceShot, 0, 0, 92, 92);
   } catch (e) {}
   hud.hidden = true; hint.hidden = true; endEl.hidden = false;
+  const box = $('install'); if (box.parentElement !== $('news').parentElement) $('news').after(box);
+  renderInstall(false);
   prepareCard();
 }
 
@@ -2217,9 +2236,9 @@ function writeRant(pct) {
   ]);
   const lines = [];
   lines.push(pick([
-    `Just got punched ${h} times by a VERY angry person. Probably on the toilet. Total loser!`,
-    `A hater, a real nobody, just hit my BEAUTIFUL face ${h} times. Didn't hurt. Not even a little!`,
-    `${h} "punches" from a sad, sad individual who clearly needs a hobby. I'm the hobby. Unfair!`
+    `Just got punched ${h} ${h === 1 ? 'time' : 'times'} by a VERY angry person. Probably on the toilet. Total loser!`,
+    `A hater, a real nobody, just hit my BEAUTIFUL face ${h} ${h === 1 ? 'time' : 'times'}. Didn't hurt. Not even a little!`,
+    `${h} "${h === 1 ? 'punch' : 'punches'}" from a sad, sad individual who clearly needs a hobby. I'm the hobby. Unfair!`
   ]));
   if (G.big > 0.85) lines.push(`Their biggest one was a ${(G.big * 10).toFixed(1)}. I've been hit harder by a cheeseburger.`);
   else lines.push(`Their hardest punch was a pathetic ${(G.big * 10).toFixed(1)} out of 10. LOW ENERGY!`);
@@ -2249,7 +2268,7 @@ $('copyBtn').addEventListener('click', async () => {
 });
 $('againBtn').addEventListener('click', () => {
   endEl.hidden = true; startEl.hidden = false; G.mode = 'title'; G.ko = false; G.dazed = 0; resetDamage(); hair.mess = 0; clearRound();
-  stopSpeech(false); bubbleEl.hidden = true; renderWeapons();
+  stopSpeech(false); bubbleEl.hidden = true; renderWeapons(); updateInstallLink(); $('install').hidden = true;
 });
 
 /* share card: a portrait image people can post */
@@ -2324,6 +2343,94 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) { AU.ctx.suspend(); try { speechSynthesis.cancel(); } catch (e) {} }
   else AU.ctx.resume();
 });
+
+/* ------------------------------------------------------- install as an app
+   Android/desktop Chrome: one tap via the browser's own install prompt.
+   iPhone Safari: Apple gives no prompt, so point at the Share button.
+   In-app browsers (TikTok, Instagram, Facebook...): can't install there,
+   so show how to open the link in the real browser. Never shown once the
+   game is running from the home screen, or inside an embedding frame. */
+const UA = navigator.userAgent || '';
+const IS_IOS = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/.test(UA);
+const IN_APP = /FBAN|FBAV|FB_IAB|Instagram|musical_ly|Bytedance|TikTok|Snapchat|LinkedInApp|Line\/|Twitter|GSA\/|; wv\)/.test(UA);
+const EMBEDDED = (() => { try { return window.top !== window.self; } catch (e) { return true; } })();
+const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; updateInstallLink(); });
+window.addEventListener('appinstalled', () => { store.set('installed', true); deferredInstall = null; $('install').hidden = true; updateInstallLink(); });
+const SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="#f5c044" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+const DOTS_ICON = '<svg viewBox="0 0 24 24" fill="#f5c044" aria-label="menu"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+function installKind() {
+  if (EMBEDDED || standalone() || store.get('installed', false)) return null;
+  if (IN_APP) return 'inapp';
+  if (deferredInstall) return 'prompt';
+  if (IS_IOS) return 'ios';
+  return null;   // desktop without a prompt: the QR panel covers it
+}
+function updateInstallLink() { $('installLink').hidden = !installKind() || life.sessions < 1; }
+function renderInstall(force) {
+  const box = $('install'), kind = installKind();
+  const seen = store.get('installAsks', 0);
+  if (!kind || (!force && seen >= 3)) { box.hidden = true; return; }
+  if (!force) store.set('installAsks', seen + 1);
+  const close = '<button type="button" class="ghost" data-act="later">Not now</button>';
+  if (kind === 'prompt') {
+    box.innerHTML = `<h3>Keep Thump on your phone</h3><p>Add him to your home screen. Opens full screen, works offline, no app store.</p>
+      <div class="row"><button type="button" class="go" data-act="install">Add to home screen</button>${close}</div>`;
+  } else if (kind === 'ios') {
+    box.innerHTML = `<h3>Keep Thump on your phone</h3><p>Two taps, no app store:</p>
+      <ol><li>Tap Share ${SHARE_ICON} in Safari's toolbar</li><li>Choose <b>Add to Home Screen</b></li></ol>
+      <div class="row">${close}</div>`;
+  } else {
+    box.innerHTML = `<h3>Want Thump on your home screen?</h3><p>This app's built-in browser can't install him. Open the link in ${IS_IOS ? 'Safari' : 'Chrome'} first:</p>
+      <ol><li>Tap the menu ${DOTS_ICON} (top or bottom corner)</li><li>Choose <b>Open in ${IS_IOS ? 'Safari' : 'browser'}</b></li></ol>
+      <div class="row">${IS_ANDROID ? '<button type="button" class="go" data-act="chrome">Open in Chrome</button>' : '<button type="button" class="go" data-act="copy">Copy link</button>'}${close}</div>`;
+  }
+  box.hidden = false;
+}
+$('install').addEventListener('click', async e => {
+  const act = e.target.closest('[data-act]'); if (!act) return;
+  const a = act.dataset.act;
+  if (a === 'later') { $('install').hidden = true; return; }
+  if (a === 'install' && deferredInstall) {
+    deferredInstall.prompt();
+    try { const r = await deferredInstall.userChoice; if (r && r.outcome === 'accepted') { store.set('installed', true); $('install').hidden = true; } } catch (err) {}
+    deferredInstall = null; updateInstallLink();
+  }
+  if (a === 'chrome') {
+    const u = new URL(location.href);
+    location.href = `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(u.href)};end`;
+  }
+  if (a === 'copy') {
+    try { await navigator.clipboard.writeText(location.href); act.textContent = 'Copied. Paste in Safari'; }
+    catch (err) { act.textContent = location.host; }
+  }
+});
+$('installLink').addEventListener('click', () => {
+  // same card as the end screen, shown on the title sheet
+  renderInstall(true);
+  const box = $('install');
+  if (!box.hidden) { startEl.querySelector('.sheet-in').appendChild(box); box.scrollIntoView({ block: 'nearest' }); }
+});
+updateInstallLink();
+
+// desktop: offer a QR code to carry the game to a phone
+(function desktopQR() {
+  const desktop = window.matchMedia && matchMedia('(pointer: fine)').matches && !IS_IOS && !IS_ANDROID;
+  if (!desktop || EMBEDDED || !/^https?:/.test(location.protocol)) return;
+  const sc = document.createElement('script');
+  sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+  sc.onload = () => {
+    try {
+      const qr = qrcode(0, 'M'); qr.addData(location.origin + location.pathname); qr.make();
+      $('qrImg').src = qr.createDataURL(5, 2);
+      const show = () => { $('qrPanel').hidden = G.mode !== 'title'; };
+      show(); setInterval(show, 500);
+    } catch (e) {}
+  };
+  document.head.appendChild(sc);
+})();
 
 loadVoiceManifest();
 loadSfxManifest();

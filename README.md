@@ -11,6 +11,14 @@ Host the folder anywhere with HTTPS (GitHub Pages works). On a phone, open it an
 - **Stress relief** (solo): punch until your blood pressure is back to normal.
 - **Drinking game**: pass the phone, one punch each. Every few turns Thump hands out one of 10 drinking punishments in his own voice (the odds rise with every dry turn, so they land unpredictably, sometimes back to back, usually 2–12 turns apart). Some only fire when they fit: "Nice punch" needs a big hit, "both of those punches were sad" needs two weak ones in a row. 18+.
 
+## Getting it on a phone
+The link is the app: no landing page, no sign-up. After the first round the end screen offers to install:
+- **Android Chrome**: one-tap "Add to home screen" (the browser's own install prompt).
+- **iPhone Safari**: a two-step guide pointing at the Share button, then *Add to Home Screen*.
+- **In-app browsers** (TikTok, Instagram, Facebook...): they can't install, so the card explains how to open the link in Safari/Chrome (Android gets a direct "Open in Chrome" button).
+- **Desktop**: a QR code on the title screen to carry the game to a phone.
+None of this shows once it's running from the home screen, or when embedded in another page.
+
 ## How to play
 - **Tap**: jab (left and right gloves alternate)
 - **Swipe** sideways: hook
