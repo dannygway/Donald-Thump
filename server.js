@@ -12,9 +12,9 @@ import { onRequestGet as checkout } from './functions/api/checkout.js';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 // only these are public; everything else in the repo (tools, functions, .git) is not
-const PUBLIC = [/^\/$/, /^\/index\.html$/, /^\/sw\.js$/, /^\/manifest\.webmanifest$/, /^\/icons\/[\w.-]+\.png$/, /^\/voice\/[\w.-]+\.(mp3|json)$/, /^\/sfx\/[\w.-]+\.(mp3|json)$/];
+const PUBLIC = [/^\/$/, /^\/index\.html$/, /^\/(privacy|terms)(\.html)?$/, /^\/og\.jpg$/, /^\/sw\.js$/, /^\/manifest\.webmanifest$/, /^\/icons\/[\w.-]+\.png$/, /^\/voice\/[\w.-]+\.(mp3|json)$/, /^\/sfx\/[\w.-]+\.(mp3|json)$/];
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.webmanifest': 'application/manifest+json',
-  '.png': 'image/png', '.mp3': 'audio/mpeg', '.json': 'application/json' };
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.json': 'application/json' };
 const SECURITY = {
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'strict-origin-when-cross-origin',
@@ -37,6 +37,7 @@ const server = http.createServer(async (req, res) => {
     let path = decodeURIComponent(url.pathname);
     if (!PUBLIC.some(re => re.test(path))) { res.writeHead(404, SECURITY); return res.end('Not found'); }
     if (path === '/') path = '/index.html';
+    if (path === '/privacy' || path === '/terms') path += '.html';
     const file = normalize(join(ROOT, path));
     if (!file.startsWith(ROOT.endsWith(sep) ? ROOT : ROOT + sep)) { res.writeHead(403); return res.end(); }
     const info = await stat(file).catch(() => null);

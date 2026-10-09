@@ -26,6 +26,7 @@ export async function onRequestGet({ request, env }) {
     client_reference_id: ref,
     'metadata[app]': 'donald-thump',
     'metadata[variant]': v,
+    'custom_text[submit][message]': 'Instant digital unlock: access starts as soon as you pay, so you agree to lose the 14-day cancellation right. Terms: ' + origin + '/terms.html',
     success_url: `${origin}/?paid={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/`
   });
