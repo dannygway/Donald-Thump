@@ -359,7 +359,7 @@ const store = {
 /* ---------------------------------------------------------------- canvas */
 const cv = document.getElementById('stage');
 const ctx = cv.getContext('2d');
-let W = 0, H = 0, DPR = 1, S = 1;
+let W = 0, H = 0, DPR = 1, S = 1, SAFE_T = 0;
 let bg = null, seal = null;
 const cam = { y: 0.3, z: 0.72 };
 
@@ -368,6 +368,8 @@ function resize() {
   W = cv.clientWidth; H = cv.clientHeight;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   S = Math.min(W / 560, H / 820);
+  // notch / status bar height: the HUD's top padding is env(safe-area-inset-top) + 12px
+  SAFE_T = Math.max(0, (parseFloat(getComputedStyle(document.getElementById('hud')).paddingTop) || 12) - 12);
   buildBG();
 }
 
@@ -1996,7 +1998,7 @@ function render(t) {
   if (G.mode === 'title' && !everHit) {
     const [nx, ny] = toScreen(0, -340);
     const pulse = 1 + Math.sin(t * 5) * 0.05;
-    ctx.save(); ctx.translate(nx, Math.max(28, ny - 18)); ctx.scale(pulse, pulse);
+    ctx.save(); ctx.translate(nx, Math.max(SAFE_T + 28, ny - 18)); ctx.scale(pulse, pulse);
     ctx.font = '700 15px "Barlow Condensed","Arial Narrow",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const label = 'GO ON. TAP HIS FACE.'; const tw = ctx.measureText(label).width + 28;
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-tw / 2, -16, tw, 32, 16) : ctx.rect(-tw / 2, -16, tw, 32);
@@ -2008,7 +2010,7 @@ function render(t) {
   if (!bubbleEl.hidden) {
     const [bx, by] = toScreen(130, -250);
     const bw = bubbleEl.offsetWidth, bh = bubbleEl.offsetHeight;
-    const minTop = hud.hidden ? 12 : hud.offsetHeight + 10;
+    const minTop = hud.hidden ? SAFE_T + 12 : hud.offsetHeight + 10;
     const left = clamp(bx, 12, W - bw - 12), top = clamp(by - bh, minTop, H - bh - 12);
     bubbleEl.style.left = left + 'px'; bubbleEl.style.top = top + 'px';
   }
