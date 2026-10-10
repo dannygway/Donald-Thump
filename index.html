@@ -34,6 +34,7 @@
 /* Fight night in the press room: one committed dark stage, hair-gold and glove-red on navy curtain */
 :root{
   --night:#0a1128;
+  --st:env(safe-area-inset-top,0px);
   --navy:#16244a;
   --navy-2:#22356a;
   --gold:#f5c044;
@@ -58,7 +59,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 /* HUD */
-#hud{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
+#hud{position:absolute;left:0;right:0;top:0;padding:calc(var(--st) + 12px) 16px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
 .label{font:600 11px/1 var(--cond);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .bp{flex:1;max-width:240px;min-width:0}
 .bp-read{display:flex;align-items:baseline;gap:6px;margin-top:5px;flex-wrap:wrap}
@@ -119,7 +120,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .fine{font:500 12px/1.4 var(--body);color:#8392b8}
 
 /* end */
-#end{position:absolute;inset:0;background:rgba(6,10,24,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex}
+#end{position:absolute;inset:0;background:rgba(6,10,24,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow-y:auto;padding:calc(var(--st) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex}
 .end-in{width:100%;max-width:470px;margin:auto;display:grid;gap:16px;animation:rise .5s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes rise{from{transform:translateY(30px);opacity:.0}to{transform:none;opacity:1}}
 .end-h{margin:0;font:400 clamp(54px,16vw,84px)/.86 var(--display);color:var(--cream);text-shadow:0 4px 0 var(--red),0 9px 0 #6d0c1c;transform:rotate(-2deg)}
@@ -169,7 +170,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .btns .wide{grid-column:1/-1}
 #hint #hintText{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
 @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
-#card{position:absolute;inset:0;background:rgba(6,10,24,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);-webkit-user-select:auto;user-select:auto}
+#card{position:absolute;inset:0;background:rgba(6,10,24,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--st) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);-webkit-user-select:auto;user-select:auto}
 #card img{max-width:100%;max-height:68vh;border-radius:14px;box-shadow:0 10px 0 rgba(0,0,0,.35);-webkit-touch-callout:default}
 #card p{margin:0;text-align:center;font:500 14px/1.4 var(--body);color:#cdd6ee;max-width:36ch}
 #card .ghost{height:48px;padding:0 22px}
@@ -190,7 +191,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 #paywall .fine{color:#5d6675;font-size:12.5px}
 #paywall .ghost{color:var(--night);border-color:rgba(10,17,40,.35);height:50px}
 #paywall .go[disabled]{opacity:.6}
-#penalty,#paywall{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+#penalty,#paywall{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(var(--st) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
 .pen-in{width:100%;max-width:420px;background:var(--cream);color:var(--night);border-radius:20px;overflow:hidden;box-shadow:0 10px 0 rgba(0,0,0,.35);transform:rotate(-2deg);animation:slam .45s cubic-bezier(.2,1.4,.3,1) both}
 .pen-band{background:var(--red);color:var(--cream);padding:12px 20px 11px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .pen-band b{font:400 18px/1 var(--display);letter-spacing:.06em}
@@ -359,7 +360,7 @@ const store = {
 /* ---------------------------------------------------------------- canvas */
 const cv = document.getElementById('stage');
 const ctx = cv.getContext('2d');
-let W = 0, H = 0, DPR = 1, S = 1, SAFE_T = 0;
+let W = 0, H = 0, DPR = 1, S = 1, SAFE_T = 0, OFF_Y = 0;
 let bg = null, seal = null;
 const cam = { y: 0.3, z: 0.72 };
 
@@ -368,7 +369,17 @@ function resize() {
   W = cv.clientWidth; H = cv.clientHeight;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   S = Math.min(W / 560, H / 820);
-  // notch / status bar height: the HUD's top padding is env(safe-area-inset-top) + 12px
+  // iOS home-screen apps can come up one status bar short, leaving a dead strip at the bottom.
+  // When that happens, slide the whole app down so the strip sits behind the status bar instead.
+  let gap = 0;
+  if (navigator.standalone === true) {
+    const sh = innerHeight > innerWidth ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    gap = sh - innerHeight; if (gap < 0 || gap > 80) gap = 0;
+  }
+  OFF_Y = gap;
+  document.getElementById('app').style.transform = gap ? `translateY(${gap}px)` : '';
+  document.documentElement.style.setProperty('--st', gap ? '0px' : 'env(safe-area-inset-top,0px)');
+  // notch / status bar height: the HUD's top padding is var(--st) + 12px
   SAFE_T = Math.max(0, (parseFloat(getComputedStyle(document.getElementById('hud')).paddingTop) || 12) - 12);
   buildBG();
 }
@@ -1762,14 +1773,14 @@ cv.addEventListener('pointerdown', e => {
   au();
   if (G.mode === 'end' || turnLocked()) return;
   try { cv.setPointerCapture(e.pointerId); } catch (err) {}
-  ptrs.set(e.pointerId, { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t0: performance.now(), moved: false, charging: false, charge: 0 });
-  lastPtr = [e.clientX, e.clientY];
+  ptrs.set(e.pointerId, { x0: e.clientX, y0: e.clientY - OFF_Y, x: e.clientX, y: e.clientY - OFF_Y, t0: performance.now(), moved: false, charging: false, charge: 0 });
+  lastPtr = [e.clientX, e.clientY - OFF_Y];
   e.preventDefault();
 });
 cv.addEventListener('pointermove', e => {
-  lastPtr = [e.clientX, e.clientY];
+  lastPtr = [e.clientX, e.clientY - OFF_Y];
   const p = ptrs.get(e.pointerId); if (!p) return;
-  p.x = e.clientX; p.y = e.clientY;
+  p.x = e.clientX; p.y = e.clientY - OFF_Y;
   if (!p.charging && Math.hypot(p.x - p.x0, p.y - p.y0) > 16) p.moved = true;
 });
 function endPtr(e, cancel) {
