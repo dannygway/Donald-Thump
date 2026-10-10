@@ -35,6 +35,7 @@
 :root{
   --night:#0a1128;
   --st:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px);
   --navy:#16244a;
   --navy-2:#22356a;
   --gold:#f5c044;
@@ -77,7 +78,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .done-btn{height:40px;border-radius:12px;border:1px solid rgba(245,192,68,.55);background:rgba(10,17,40,.6);padding:0 12px;font:700 13px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 
 /* hint row */
-#hint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding-inline:16px;pointer-events:none;transition:opacity .8s}
+#hint{position:absolute;left:0;right:0;bottom:calc(var(--sb) + 14px);display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding-inline:16px;pointer-events:none;transition:opacity .8s}
 #hint span{font:600 12px/1 var(--cond);letter-spacing:.1em;text-transform:uppercase;background:rgba(10,17,40,.72);border:1px solid rgba(245,192,68,.3);padding:7px 10px 6px;border-radius:999px;color:var(--muted)}
 #hint b{color:var(--gold);font-weight:700}
 
@@ -89,7 +90,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 @keyframes cut{0%{transform:translate(0,0) rotate(0)}15%{transform:translate(-8px,2px) rotate(-6deg)}30%{transform:translate(6px,-2px) rotate(5deg);opacity:1}100%{transform:translate(14px,-30px) rotate(12deg);opacity:0}}
 
 /* sheets */
-.sheet{position:absolute;left:0;right:0;bottom:0;padding:56px 16px calc(env(safe-area-inset-bottom,0px) + 18px);background:linear-gradient(to top,rgba(8,13,32,.97) 0%,rgba(8,13,32,.94) 72%,rgba(8,13,32,0) 100%);display:flex;justify-content:center}
+.sheet{position:absolute;left:0;right:0;bottom:0;padding:56px 16px calc(var(--sb) + 18px);background:linear-gradient(to top,rgba(8,13,32,.97) 0%,rgba(8,13,32,.94) 72%,rgba(8,13,32,0) 100%);display:flex;justify-content:center}
 .sheet-in{width:100%;max-width:540px;display:grid;gap:14px}
 .eyebrow{font:600 12px/1 var(--cond);letter-spacing:.22em;text-transform:uppercase;color:var(--red)}
 .logo{margin:0;display:grid;line-height:.84}
@@ -120,7 +121,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .fine{font:500 12px/1.4 var(--body);color:#8392b8}
 
 /* end */
-#end{position:absolute;inset:0;background:rgba(6,10,24,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow-y:auto;padding:calc(var(--st) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex}
+#end{position:absolute;inset:0;background:rgba(6,10,24,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow-y:auto;padding:calc(var(--st) + 24px) 16px calc(var(--sb) + 24px);display:flex}
 .end-in{width:100%;max-width:470px;margin:auto;display:grid;gap:16px;animation:rise .5s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes rise{from{transform:translateY(30px);opacity:.0}to{transform:none;opacity:1}}
 .end-h{margin:0;font:400 clamp(54px,16vw,84px)/.86 var(--display);color:var(--cream);text-shadow:0 4px 0 var(--red),0 9px 0 #6d0c1c;transform:rotate(-2deg)}
@@ -162,7 +163,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .install .go{height:48px;font-size:16px;padding:0 18px;flex:1}
 .install .ghost{height:48px;font-size:13px;padding:0 14px}
 .tiny-link{border:0;background:none;padding:0;color:var(--gold);font:700 12px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
-#qrPanel{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:var(--cream);color:var(--night);border-radius:16px;padding:12px 12px 10px;display:grid;gap:6px;justify-items:center;box-shadow:0 6px 0 rgba(0,0,0,.3);width:150px}
+#qrPanel{position:absolute;right:20px;bottom:calc(var(--sb) + 20px);background:var(--cream);color:var(--night);border-radius:16px;padding:12px 12px 10px;display:grid;gap:6px;justify-items:center;box-shadow:0 6px 0 rgba(0,0,0,.3);width:150px}
 #qrPanel img{width:126px;height:126px;image-rendering:pixelated}
 #qrPanel b{font:400 14px/1.1 var(--display);text-align:center}
 #qrPanel span{font:600 11px/1.2 var(--cond);letter-spacing:.08em;text-transform:uppercase;color:#5d6675;text-align:center}
@@ -170,7 +171,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .btns .wide{grid-column:1/-1}
 #hint #hintText{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
 @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
-#card{position:absolute;inset:0;background:rgba(6,10,24,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--st) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);-webkit-user-select:auto;user-select:auto}
+#card{position:absolute;inset:0;background:rgba(6,10,24,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(var(--st) + 20px) 16px calc(var(--sb) + 20px);-webkit-user-select:auto;user-select:auto}
 #card img{max-width:100%;max-height:68vh;border-radius:14px;box-shadow:0 10px 0 rgba(0,0,0,.35);-webkit-touch-callout:default}
 #card p{margin:0;text-align:center;font:500 14px/1.4 var(--body);color:#cdd6ee;max-width:36ch}
 #card .ghost{height:48px;padding:0 22px}
@@ -184,14 +185,14 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .opts{display:grid;gap:8px}
 .dk{flex:1;max-width:240px;min-width:0;display:grid;gap:5px}
 #turnVal{font:400 26px/1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
-#pass{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);transform:translateX(-50%);background:var(--gold);color:var(--night);font:400 20px/1 var(--display);letter-spacing:.04em;padding:12px 20px 11px;border-radius:999px;box-shadow:0 5px 0 var(--gold-deep);pointer-events:none;white-space:nowrap;animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
+#pass{position:absolute;left:50%;bottom:calc(var(--sb) + 64px);transform:translateX(-50%);background:var(--gold);color:var(--night);font:400 20px/1 var(--display);letter-spacing:.04em;padding:12px 20px 11px;border-radius:999px;box-shadow:0 5px 0 var(--gold-deep);pointer-events:none;white-space:nowrap;animation:pop .3s cubic-bezier(.2,.9,.3,1.4)}
 #paywall .pen-band{background:var(--gold);color:var(--night)}
 #payH{margin:0;font:400 clamp(28px,8vw,36px)/1.05 var(--display);text-wrap:balance}
 #paywall p{margin:0;font:500 15px/1.45 var(--body);color:#2a3350}
 #paywall .fine{color:#5d6675;font-size:12.5px}
 #paywall .ghost{color:var(--night);border-color:rgba(10,17,40,.35);height:50px}
 #paywall .go[disabled]{opacity:.6}
-#penalty,#paywall{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(var(--st) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px)}
+#penalty,#paywall{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(var(--st) + 20px) 16px calc(var(--sb) + 20px)}
 .pen-in{width:100%;max-width:420px;background:var(--cream);color:var(--night);border-radius:20px;overflow:hidden;box-shadow:0 10px 0 rgba(0,0,0,.35);transform:rotate(-2deg);animation:slam .45s cubic-bezier(.2,1.4,.3,1) both}
 .pen-band{background:var(--red);color:var(--cream);padding:12px 20px 11px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .pen-band b{font:400 18px/1 var(--display);letter-spacing:.06em}
@@ -378,7 +379,9 @@ function resize() {
   }
   OFF_Y = gap;
   document.getElementById('app').style.transform = gap ? `translateY(${gap}px)` : '';
+  // iOS won't draw the app in the strip it pushed off the bottom, so keep bottom-pinned UI above it
   document.documentElement.style.setProperty('--st', gap ? '0px' : 'env(safe-area-inset-top,0px)');
+  document.documentElement.style.setProperty('--sb', gap ? gap + 'px' : 'env(safe-area-inset-bottom,0px)');
   // notch / status bar height: the HUD's top padding is var(--st) + 12px
   SAFE_T = Math.max(0, (parseFloat(getComputedStyle(document.getElementById('hud')).paddingTop) || 12) - 12);
   buildBG();
