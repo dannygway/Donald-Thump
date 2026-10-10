@@ -121,7 +121,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 .fine{font:500 12px/1.4 var(--body);color:#8392b8}
 
 /* end */
-#end{position:absolute;inset:0;background:rgba(6,10,24,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow-y:auto;padding:calc(var(--st) + 24px) 16px calc(var(--sb) + 24px);display:flex}
+#end{position:absolute;inset:0;background:rgba(6,10,24,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(var(--st) + 24px) 16px calc(var(--sb) + 24px);display:flex}
 .end-in{width:100%;max-width:470px;margin:auto;display:grid;gap:16px;animation:rise .5s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes rise{from{transform:translateY(30px);opacity:.0}to{transform:none;opacity:1}}
 .end-h{margin:0;font:400 clamp(54px,16vw,84px)/.86 var(--display);color:var(--cream);text-shadow:0 4px 0 var(--red),0 9px 0 #6d0c1c;transform:rotate(-2deg)}
@@ -367,21 +367,22 @@ const cam = { y: 0.3, z: 0.72 };
 
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = cv.clientWidth; H = cv.clientHeight;
-  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  S = Math.min(W / 560, H / 820);
-  // iOS home-screen apps can come up one status bar short, leaving a dead strip at the bottom.
-  // When that happens, slide the whole app down so the strip sits behind the status bar instead.
+  // iOS home-screen apps can come up one status bar short: the bottom strip is painted but never
+  // shows any app content. When that happens, start the app below the status bar instead, so it
+  // fills exactly the part of the screen iOS will draw (top offset, not a transform: transforms
+  // stop iOS/Chromium from scrolling the end screen).
   let gap = 0;
   if (navigator.standalone === true) {
     const sh = innerHeight > innerWidth ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
     gap = sh - innerHeight; if (gap < 0 || gap > 80) gap = 0;
   }
   OFF_Y = gap;
-  document.getElementById('app').style.transform = gap ? `translateY(${gap}px)` : '';
-  // iOS won't draw the app in the strip it pushed off the bottom, so keep bottom-pinned UI above it
+  document.getElementById('app').style.top = gap ? gap + 'px' : '';
   document.documentElement.style.setProperty('--st', gap ? '0px' : 'env(safe-area-inset-top,0px)');
-  document.documentElement.style.setProperty('--sb', gap ? gap + 'px' : 'env(safe-area-inset-bottom,0px)');
+  document.documentElement.style.setProperty('--sb', gap ? '0px' : 'env(safe-area-inset-bottom,0px)');
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  S = Math.min(W / 560, H / 820);
   // notch / status bar height: the HUD's top padding is var(--st) + 12px
   SAFE_T = Math.max(0, (parseFloat(getComputedStyle(document.getElementById('hud')).paddingTop) || 12) - 12);
   buildBG();
