@@ -7,6 +7,7 @@
 //     "clip": "clips/windmills.mp4",   // the hook. Leave out for a placeholder slate.
 //     "in": 12.4, "out": 15.9,         // seconds to use from the clip (keep it under ~4s)
 //     "layout": "fit",                 // "fit" = whole 16:9 frame over a blurred fill, "cover" = crop to fill
+//     "focusX": 0.5,                   // cover only: where to crop, 0 = left edge, 1 = right edge
 //     "caption": "Him explaining windmills for the 400th time",
 //     "appCaption": "Me:",             // optional line over the first 2s of the fight
 //     "seed": 7, "fightSecs": 7,       // seed changes the fight; same seed = same fight
@@ -68,7 +69,7 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
   const D = +(cout - cin).toFixed(3), HD = D + FREEZE;
   const layout = post.layout || 'fit';
   const vChain = layout === 'cover'
-    ? `[0:v]trim=${cin}:${cout},setpts=PTS-STARTPTS,fps=${FPS},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1[base]`
+    ? `[0:v]trim=${cin}:${cout},setpts=PTS-STARTPTS,fps=${FPS},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}:(iw-ow)*${post.focusX ?? 0.5}:(ih-oh)/2,setsar=1[base]`
     : `[0:v]trim=${cin}:${cout},setpts=PTS-STARTPTS,fps=${FPS},split[a][b];` +
       `[a]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},boxblur=40:2,eq=brightness=-0.22:saturation=0.8[bg];` +
       `[b]scale=${W}:-2,setsar=1[fg];[bg][fg]overlay=0:(H-h)/2+90,setsar=1[base]`;

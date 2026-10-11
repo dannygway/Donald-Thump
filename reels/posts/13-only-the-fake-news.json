@@ -2,7 +2,7 @@
   "clip": "../clips/only-the-fake-news.mp4",
   "in": 0.6,
   "out": 4.0,
-  "layout": "fit",
+  "layout": "cover",
   "caption": "When the receipts come out",
   "seed": 113,
   "fightSecs": 7,
@@ -12,5 +12,6 @@
     "file": "https://archive.org/details/youtube-jI1c2X9Sqb8",
     "credit": "The White House (official upload)"
   },
-  "appCaption": "Me:"
+  "appCaption": "Me:",
+  "focusX": 0.68
 }

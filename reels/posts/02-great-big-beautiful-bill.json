@@ -2,7 +2,7 @@
   "clip": "../clips/great-big-beautiful-bill.mp4",
   "in": 0.6,
   "out": 5.2,
-  "layout": "fit",
+  "layout": "cover",
   "caption": "He found an adjective and he's not giving it back",
   "seed": 102,
   "fightSecs": 7,
@@ -12,5 +12,6 @@
     "file": "https://archive.org/details/youtube-jI1c2X9Sqb8",
     "credit": "The White House (official upload)"
   },
-  "appCaption": "Me:"
+  "appCaption": "Me:",
+  "focusX": 0.68
 }
