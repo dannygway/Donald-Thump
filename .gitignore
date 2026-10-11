@@ -2,3 +2,4 @@
 reels/posts/*/
 reels/clips/
 reels/out/
+reels/*.zip
