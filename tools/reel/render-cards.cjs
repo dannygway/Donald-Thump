@@ -1,6 +1,6 @@
 // Renders the reel's text overlays as transparent 1080x1920 PNGs in the app's own fonts.
 //   node tools/reel/render-cards.cjs <spec.json> <outDir>
-// spec: { caption, appCaption?, endTitle?, endSub?, iconPath? }
+// spec: { caption, captionTop?, appCaption?, endTitle?, endSub?, iconPath? }
 const fs = require('fs'), path = require('path');
 let chromium;
 try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = require('/opt/node-tools/node_modules/playwright')); }
@@ -28,7 +28,7 @@ const base = `<!doctype html><html><head><meta charset="utf-8">
 </style></head><body>`;
 
 const cards = {
-  'caption.png': `<div class="cap" style="top:330px"><p><span>${esc(spec.caption)}</span></p></div>`,
+  'caption.png': `<div class="cap" style="top:${+spec.captionTop || 330}px"><p><span>${esc(spec.caption)}</span></p></div>`,
   'end.png': `<div class="end"><img src="${icon}"><h1>${esc(spec.endTitle || 'Your turn.')}</h1><div class="url">donaldthump.app</div>
      <div class="sub">${esc(spec.endSub || 'Free in your browser. Link in bio.')}</div><div class="par">Parody · not affiliated with anyone</div></div>`,
 };

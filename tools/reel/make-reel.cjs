@@ -8,6 +8,7 @@
 //     "in": 12.4, "out": 15.9,         // seconds to use from the clip (keep it under ~4s)
 //     "layout": "fit",                 // "fit" = whole 16:9 frame over a blurred fill, "cover" = crop to fill
 //     "focusX": 0.5,                   // cover only: where to crop, 0 = left edge, 1 = right edge
+//     "captionTop": 330,               // caption position in px (default 330 for fit, 1150 for cover)
 //     "caption": "Him explaining windmills for the 400th time",
 //     "appCaption": "Me:",             // optional line over the first 2s of the fight
 //     "seed": 7, "fightSecs": 7,       // seed changes the fight; same seed = same fight
@@ -45,7 +46,8 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
   }
 
   // 1. overlays
-  const spec = { caption: post.caption || '', appCaption: post.appCaption, endTitle: post.endTitle, endSub: post.endSub };
+  // cropped clips usually have his head at the top, so the caption goes over his chest instead
+  const spec = { caption: post.caption || '', captionTop: post.captionTop ?? ((post.layout || 'fit') === 'cover' ? 1150 : 330), appCaption: post.appCaption, endTitle: post.endTitle, endSub: post.endSub };
   fs.writeFileSync(path.join(WORK, 'spec.json'), JSON.stringify(spec));
   node('render-cards.cjs', [path.join(WORK, 'spec.json'), WORK]);
 
