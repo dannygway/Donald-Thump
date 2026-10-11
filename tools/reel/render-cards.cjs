@@ -7,12 +7,15 @@ try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = requ
 const [specFile, out] = process.argv.slice(2);
 const spec = JSON.parse(fs.readFileSync(specFile, 'utf8'));
 const exe = ['/opt/pw-browsers/chromium', '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'].find(p => fs.existsSync(p) && fs.statSync(p).isFile());
+// the app's fonts, bundled (fonts/) so captions never fall back to a system font on a flaky network
+const ff = (family, weight, file) => `@font-face{font-family:"${family}";font-weight:${weight};font-display:block;src:url(data:font/woff2;base64,${fs.readFileSync(path.join(__dirname, 'fonts', file)).toString('base64')}) format("woff2")}`;
+const fontFaces = ff('Bowlby One', 400, 'BowlbyOne-400.woff2') + ff('Barlow', 600, 'Barlow-600.woff2') +
+  ff('Barlow Condensed', 600, 'BarlowCondensed-600.woff2') + ff('Barlow Condensed', 700, 'BarlowCondensed-700.woff2');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const icon = 'data:image/png;base64,' + fs.readFileSync(spec.iconPath || path.join(__dirname, '../../icons/icon-512.png')).toString('base64');
 
 const base = `<!doctype html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Barlow+Condensed:wght@600;700&family=Barlow:wght@600&display=block" rel="stylesheet">
-<style>html,body{margin:0;width:1080px;height:1920px;background:transparent;overflow:hidden}
+<style>${fontFaces}html,body{margin:0;width:1080px;height:1920px;background:transparent;overflow:hidden}
 *{box-sizing:border-box}
 .cap{position:absolute;left:70px;right:70px;display:flex;justify-content:center}
 .cap span{display:inline;font:400 64px/1.52 "Bowlby One",Impact,sans-serif;color:#0a1128;background:#fbf3e4;padding:4px 22px 9px;
@@ -36,12 +39,10 @@ if (spec.appCaption) cards['app-caption.png'] = `<div class="cap small" style="t
 
 (async () => {
   fs.mkdirSync(out, { recursive: true });
-  const px = process.env.HTTPS_PROXY ? [`--proxy-server=${process.env.HTTPS_PROXY}`] : [];
-  const b = await chromium.launch({ executablePath: exe, args: px });
+  const b = await chromium.launch({ executablePath: exe });
   const p = await (await b.newContext({ viewport: { width: 1080, height: 1920 }, ignoreHTTPSErrors: true })).newPage();
   for (const [name, html] of Object.entries(cards)) {
-    // fonts.ready can resolve before the webfont request even starts; ask for each face explicitly,
-    // and retry a couple of times because the font CDN occasionally stalls
+    // ask for each face explicitly (fonts.ready can resolve before loading starts); retry in case the page stalls
     let ok = false;
     for (let attempt = 0; attempt < 3 && !ok; attempt++) {
       try {
@@ -49,11 +50,12 @@ if (spec.appCaption) cards['app-caption.png'] = `<div class="cap small" style="t
         ok = await p.evaluate(async () => {
           const faces = ['400 64px "Bowlby One"', '700 64px "Barlow Condensed"', '600 38px "Barlow"'];
           await Promise.all(faces.map(f => document.fonts.load(f)));
-          return faces.every(f => document.fonts.check(f));
+          // check() is also true when no matching face exists at all, so confirm each family really loaded
+          return ['Bowlby One', 'Barlow', 'Barlow Condensed'].every(fam => [...document.fonts].some(f => f.family.replace(/"/g, '') === fam && f.status === 'loaded'));
         });
       } catch (e) { console.error(`card ${name}: attempt ${attempt + 1} failed (${e.message.split('\n')[0]})`); }
     }
-    if (!ok) { console.error('webfonts failed to load (needs network access to fonts.googleapis.com)'); process.exit(1); }
+    if (!ok) { console.error(`card ${name}: fonts failed to load`); process.exit(1); }
     await p.screenshot({ path: path.join(out, name), omitBackground: true });
   }
   await b.close();

@@ -37,7 +37,7 @@ Notes on the fields:
 - **`appCaption`**, **`endTitle`**, **`endSub`**, **`endVoice`**: all optional. `endVoice` takes any file from `voice/`, or `""` for silence.
 - Leave `clip` out to get a "YOUR CLIP HERE" slate for previewing captions.
 
-Requirements: ffmpeg, Node 18+, Playwright with Chromium, and network access to fonts.googleapis.com, because the captions use the app's fonts. The recorder serves the repo on `localhost:8779` by itself.
+Requirements: ffmpeg, Node 18+, and Playwright with Chromium. Caption fonts are bundled in `tools/reel/fonts/`. The recorder serves the repo on `localhost:8779` by itself.
 
 ### How the fight is recorded
 `tools/reel/record-app.cjs` drives the real app in headless Chromium with a frozen clock. It steps exactly 1/30s per frame, so frames never drop. It scripts pointer gestures (taps, swipes, a 1.3s hold for the haymaker) and logs every sample and voice clip the app starts, with timing, playback rate and gain. `make-reel.cjs` rebuilds the soundtrack from those same files with ffmpeg, so what you hear is what the app played, frame for frame. The mouth movement is driven from the clip audio at the fake clock time, so lip sync still holds.
