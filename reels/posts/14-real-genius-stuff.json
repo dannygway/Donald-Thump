@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/real-genius-stuff.mp4",
+  "in": 0.6,
+  "out": 4.7,
+  "layout": "fit",
+  "caption": "Him reviewing his own idea",
+  "seed": 114,
+  "fightSecs": 7,
+  "source": {
+    "what": "Honestly, it's amazing. It's real genius stuff.",
+    "youtube": "https://www.youtube.com/watch?v=wn2XtufOAHc&t=1295",
+    "file": "https://archive.org/details/youtube-wn2XtufOAHc",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

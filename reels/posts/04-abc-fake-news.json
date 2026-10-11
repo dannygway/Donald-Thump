@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/abc-fake-news.mp4",
+  "in": 0.6,
+  "out": 3.4,
+  "layout": "fit",
+  "caption": "Someone asked a normal question",
+  "seed": 104,
+  "fightSecs": 7,
+  "source": {
+    "what": "You're ABC fake news, right? Only ABC.",
+    "youtube": "https://www.youtube.com/watch?v=u2Ftw_VuedA&t=3768",
+    "file": "https://archive.org/details/youtube-u2Ftw_VuedA",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me, on his behalf:"
+}

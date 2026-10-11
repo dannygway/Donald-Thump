@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/wealthy-like-never-before.mp4",
+  "in": 0.6,
+  "out": 4.5,
+  "layout": "fit",
+  "caption": "Him, every speech, since 1987",
+  "seed": 106,
+  "fightSecs": 7,
+  "source": {
+    "what": "We're going to become a wealthy nation again. Wealthy like never before.",
+    "youtube": "https://www.youtube.com/watch?v=cQbWdz4SBEU&t=912",
+    "file": "https://archive.org/details/youtube-cQbWdz4SBEU",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

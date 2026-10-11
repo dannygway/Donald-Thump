@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/famous-middlemen.mp4",
+  "in": 0.6,
+  "out": 7.0,
+  "layout": "fit",
+  "caption": "He has just learned what a middleman is",
+  "seed": 110,
+  "fightSecs": 7,
+  "source": {
+    "what": "The famous middlemen. Nobody knows who they are. Middlemen. I've been hearing the term for 25 years. Middlemen.",
+    "youtube": "https://www.youtube.com/watch?v=u2Ftw_VuedA&t=1876",
+    "file": "https://archive.org/details/youtube-u2Ftw_VuedA",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

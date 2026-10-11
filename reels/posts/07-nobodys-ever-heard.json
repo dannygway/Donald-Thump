@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/nobodys-ever-heard.mp4",
+  "in": 0.6,
+  "out": 4.7,
+  "layout": "fit",
+  "caption": "Him describing a thing everyone has heard of",
+  "seed": 107,
+  "fightSecs": 7,
+  "source": {
+    "what": "Nobody's ever even heard of it before. Nobody's ever heard of anything like this before.",
+    "youtube": "https://www.youtube.com/watch?v=OMpL4Hze__4&t=3147",
+    "file": "https://archive.org/details/youtube-OMpL4Hze__4",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

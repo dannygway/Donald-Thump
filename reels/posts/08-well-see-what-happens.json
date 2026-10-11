@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/well-see-what-happens.mp4",
+  "in": 0.6,
+  "out": 2.2,
+  "layout": "fit",
+  "caption": "The entire plan:",
+  "seed": 108,
+  "fightSecs": 7,
+  "source": {
+    "what": "So, we'll see what happens.",
+    "youtube": "https://www.youtube.com/watch?v=OMpL4Hze__4&t=3294",
+    "file": "https://archive.org/details/youtube-OMpL4Hze__4",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

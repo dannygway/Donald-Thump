@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/perfect-country.mp4",
+  "in": 0.6,
+  "out": 6.0,
+  "layout": "fit",
+  "caption": "His memory of literally any year he was in charge",
+  "seed": 105,
+  "fightSecs": 7,
+  "source": {
+    "what": "I had no inflation. We had a perfect country. We had no wars. I ended them all.",
+    "youtube": "https://www.youtube.com/watch?v=cQbWdz4SBEU&t=617",
+    "file": "https://archive.org/details/youtube-cQbWdz4SBEU",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

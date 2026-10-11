@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/nobodys-ever-seen.mp4",
+  "in": 0.6,
+  "out": 3.7,
+  "layout": "fit",
+  "caption": "Him describing a slightly above-average Tuesday",
+  "seed": 112,
+  "fightSecs": 7,
+  "source": {
+    "what": "Nobody's ever seen anything like it. There's never been anything like it.",
+    "youtube": "https://www.youtube.com/watch?v=1ZYvjXDZ-2E&t=1231",
+    "file": "https://archive.org/details/youtube-1ZYvjXDZ-2E",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

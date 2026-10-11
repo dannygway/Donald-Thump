@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/only-the-fake-news.mp4",
+  "in": 0.6,
+  "out": 4.0,
+  "layout": "fit",
+  "caption": "When the receipts come out",
+  "seed": 113,
+  "fightSecs": 7,
+  "source": {
+    "what": "Only the fake news could come up with that one.",
+    "youtube": "https://www.youtube.com/watch?v=jI1c2X9Sqb8&t=141",
+    "file": "https://archive.org/details/youtube-jI1c2X9Sqb8",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}

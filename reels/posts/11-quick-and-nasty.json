@@ -1,0 +1,15 @@
+{
+  "clip": "../clips/quick-and-nasty.mp4",
+  "in": 0.6,
+  "out": 4.7,
+  "layout": "fit",
+  "caption": "How I'd like this to go:",
+  "seed": 111,
+  "fightSecs": 7,
+  "source": {
+    "what": "It was very quick. It was very, very quick and nasty. That's what we like.",
+    "youtube": "https://www.youtube.com/watch?v=1ZYvjXDZ-2E&t=190",
+    "file": "https://archive.org/details/youtube-1ZYvjXDZ-2E",
+    "credit": "The White House (official upload)"
+  }
+}

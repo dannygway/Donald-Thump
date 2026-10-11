@@ -1,0 +1,16 @@
+{
+  "clip": "../clips/great-big-beautiful-bill.mp4",
+  "in": 0.6,
+  "out": 5.2,
+  "layout": "fit",
+  "caption": "He found an adjective and he's not giving it back",
+  "seed": 102,
+  "fightSecs": 7,
+  "source": {
+    "what": "We call it the great big beautiful bill. We should call it the great big beautiful tax cut bill.",
+    "youtube": "https://www.youtube.com/watch?v=jI1c2X9Sqb8&t=69",
+    "file": "https://archive.org/details/youtube-jI1c2X9Sqb8",
+    "credit": "The White House (official upload)"
+  },
+  "appCaption": "Me:"
+}
