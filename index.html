@@ -190,6 +190,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
 #payH{margin:0;font:400 clamp(28px,8vw,36px)/1.05 var(--display);text-wrap:balance}
 #paywall p{margin:0;font:500 15px/1.45 var(--body);color:#2a3350}
 #paywall .fine{color:#5d6675;font-size:12.5px}
+.textbtn{background:none;border:0;padding:2px 6px;justify-self:center;font:600 13.5px/1.2 var(--body);color:#5d6675;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 #paywall .ghost{color:var(--night);border-color:rgba(10,17,40,.35);height:50px}
 #paywall .go[disabled]{opacity:.6}
 #penalty,#paywall{position:absolute;inset:0;background:rgba(6,10,24,.78);display:flex;align-items:center;justify-content:center;padding:calc(var(--st) + 20px) 16px calc(var(--sb) + 20px)}
@@ -307,6 +308,7 @@ button:focus-visible,.chip-btn:focus-visible{outline:3px solid var(--gold);outli
         <p>Unlimited drinking punishments, every night, unlocked on this phone for good. One of you pays, the whole room plays.</p>
         <button id="payBtn" class="go" type="button">Unlock for 99p</button>
         <button id="payLater" class="ghost" type="button">Not tonight</button>
+        <button id="payCode" class="textbtn" type="button">Have a code?</button>
         <p class="fine" id="payNote">Secure checkout by Stripe. Already paid on this phone? It unlocks here automatically.</p>
         <p class="fine">By paying you agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a>. It unlocks instantly, so the 14-day cancellation period doesn't apply.</p>
       </div>
@@ -2289,11 +2291,30 @@ $('payBtn').addEventListener('click', () => {
   }, 3000);
 });
 $('payLater').addEventListener('click', () => { clearInterval(payPoll); closePaywall(); });
+// free-unlock codes (owner, giveaways); the server holds the list, so nothing here gives one away
+async function redeem(code) {
+  code = String(code || '').trim();
+  if (!code) return false;
+  if (await checkPaid('unlock=' + encodeURIComponent(code))) { markPaid(); return true; }
+  return false;
+}
+$('payCode').addEventListener('click', async () => {
+  let code = null; try { code = window.prompt('Enter your code'); } catch (e) {}
+  if (!code) return;
+  $('payNote').textContent = 'Checking…';
+  $('payNote').textContent = await redeem(code) ? 'Unlocked.' : "That code didn't work.";
+});
 // another tab on this device finished checkout
 window.addEventListener('storage', e => { if (e.key === 'thump.paid' && e.newValue === 'true') markPaid(); });
 // returning from Stripe: ?paid={CHECKOUT_SESSION_ID} (after the rest of the UI is set up)
 setTimeout(async () => {
   let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+  const code = q.get('unlock');
+  if (code) {   // donaldthump.app/?unlock=CODE
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    if (isPaid() || await redeem(code)) setGameMode('drink');
+    return;
+  }
   const sid = q.get('paid'); if (!sid) return;
   try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
   if (!PAY.verifyUrl || await checkPaid('session=' + encodeURIComponent(sid))) { markPaid(); setGameMode('drink'); }

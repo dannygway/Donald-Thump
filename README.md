@@ -53,6 +53,8 @@ None of this shows once it's running from the home screen, or when embedded in a
    - **Cloudflare Pages** (free): deploy with no build step; `functions/` becomes the API. Add the same variable.
 4. The paywall appears by itself once the key is set. Test first with test-mode prices and a test key (card 4242 4242 4242 4242), using the optional `PRICE_P99` / `PRICE_P199` variables to point at the test prices, then remove them and switch to the live key.
 
+**Free unlock codes** (your own phone, mates, giveaways, press): set `UNLOCK_CODES` on the server to a comma-separated list of codes (8+ characters: letters, digits, `-`, `_`). A phone unlocks by opening `donaldthump.app/?unlock=CODE`, or by tapping **Have a code?** on the pay card. Use the second one for an iPhone home-screen app, which has its own storage separate from Safari. The codes only live on the server. To retire one, remove it from the variable; phones already unlocked stay unlocked.
+
 How it unlocks: `/api/checkout` opens Stripe in a new tab carrying the device's reference (`client_reference_id`); the game polls `/api/verify` and unlocks itself, which also covers installed iPhone apps that hand payment to Safari. Returning via the redirect unlocks too. Unlocks are per device; there's no account to restore from on a new phone.
 
 ## Legal notes
