@@ -1,6 +1,6 @@
 // Renders the reel's text overlays as transparent 1080x1920 PNGs in the app's own fonts.
 //   node tools/reel/render-cards.cjs <spec.json> <outDir>
-// spec: { caption, captionTop?, appCaption?, endTitle?, endSub?, iconPath? }
+// spec: { caption, captionTop?, appCaption?, extra?: [{ file, text, top, small }], endTitle?, endSub?, iconPath? }
 const fs = require('fs'), path = require('path');
 let chromium;
 try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = require('/opt/node-tools/node_modules/playwright')); }
@@ -35,6 +35,8 @@ const cards = {
   'end.png': `<div class="end"><img src="${icon}"><h1>${esc(spec.endTitle || 'Your turn.')}</h1><div class="url">donaldthump.app</div>
      <div class="sub">${esc(spec.endSub || 'Free in your browser. Link in bio.')}</div><div class="par">Parody · not affiliated with anyone</div></div>`,
 };
+// timed captions for the fight: { file, text, top, small }
+for (const c of spec.extra || []) cards[c.file] = `<div class="cap${c.small ? ' small' : ''}" style="top:${c.top || 445}px"><p><span>${esc(c.text)}</span></p></div>`;
 if (spec.appCaption) cards['app-caption.png'] = `<div class="cap small" style="top:445px"><p><span>${esc(spec.appCaption)}</span></p></div>`;
 
 (async () => {

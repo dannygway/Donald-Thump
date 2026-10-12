@@ -1,6 +1,16 @@
 // Records a scripted Donald Thump fight as a frame-perfect "screen recording".
 //
-//   node tools/reel/record-app.cjs <outDir> [--seed 7] [--secs 8] [--url http://localhost:8779/index.html]
+//   node tools/reel/record-app.cjs <outDir> [--seed 7] [--secs 8] [--plan plan.json] [--url http://localhost:8779/index.html]
+//
+// Without --plan it records a stress-relief fight. A plan scripts anything else:
+//   { "mode": "drink",             // "stress" (default) or "drink"
+//     "startOnTitle": true,        // start recording on the menu (then click #goBtn yourself)
+//     "actions": [ { "t": 0.4, "type": "tap", "at": [0, 0] },            // face-space taps, swipes, holds
+//                  { "t": 1.0, "type": "swipe", "from": [300, 0], "to": [-160, 0], "dur": 0.12 },
+//                  { "t": 2.0, "type": "click", "sel": "#goBtn" } ],      // DOM clicks (dots shown too)
+//     "punish": { "3": "EVERYBODY DRINKS! The whole room! Tremendous!",  // force a card on turn N, or on the first turn
+//                 "@9.5": "Take a sip. ..." },                            // ending after 9.5s; every other turn is safe
+//     "odds": true }               // TV-poker style "chance he makes you drink" graphic
 //
 // Writes <outDir>/frames/%05d.jpg (1080x1920, 30fps) and <outDir>/audio.json — every sample and
 // voice clip the app started, with its time, playback rate and gain, so make-reel can rebuild the
@@ -14,6 +24,7 @@ const args = process.argv.slice(2);
 const out = args[0]; if (!out) { console.error('usage: record-app.cjs <outDir> [--seed n] [--secs n] [--url u]'); process.exit(1); }
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i > 0 ? args[i + 1] : d; };
 const SEED = +opt('seed', Date.now() % 1e6), SECS = +opt('secs', 8), URL = opt('url', 'http://localhost:8779/index.html');
+const PLAN = opt('plan', null) ? JSON.parse(fs.readFileSync(opt('plan'), 'utf8')) : null;
 const FPS = 30, STEP = 1000 / FPS;
 const exe = ['/opt/pw-browsers/chromium', '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'].find(p => fs.existsSync(p) && fs.statSync(p).isFile());
 
@@ -33,6 +44,57 @@ function choreo(rnd) {
   hook(-1); jab(); jab(); hook(1);
   hay(); jab(); jab(); hook(-1);
   return seq.filter(a => a.t < SECS - 0.4);
+}
+
+// Runs in the page. Wraps the game's own turn logic so a plan decides which turns punish and with which
+// card (everything else the app does is untouched), and optionally draws the TV-poker odds graphic.
+function installDrinkHooks(plan) {
+  const forced = plan.punish || {};
+  const safeAll = !!plan.punish;
+  const _end = endTurn, _pun = punish;
+  let nextCard = null; const used = new Set();
+  const oddsFor = k => Math.round((k >= 16 ? 1 : 0.04 + 0.028 * (k - 1)) * 100);
+  let box = null;
+  if (plan.odds) {
+    const css = document.createElement('style');
+    css.textContent = `#__odds{position:fixed;left:14px;top:452px;z-index:97;display:flex;align-items:stretch;font-family:"Barlow Condensed","Arial Narrow",sans-serif;box-shadow:0 4px 0 rgba(0,0,0,.35);border-radius:8px;overflow:hidden;transition:transform .15s}
+      #__odds .pl{background:#f5c044;color:#0a1128;font:700 13px/1 inherit;letter-spacing:.12em;padding:0 10px;display:flex;align-items:center;writing-mode:horizontal-tb}
+      #__odds .bd{background:rgba(10,17,40,.92);padding:6px 12px 7px;display:grid;gap:1px}
+      #__odds small{font:700 9.5px/1 "Barlow Condensed",sans-serif;letter-spacing:.16em;color:#9fb0d6}
+      #__odds b{font:400 30px/1 "Bowlby One",Impact,sans-serif;color:#fbf3e4;font-variant-numeric:tabular-nums}
+      #__odds.hot b{color:#ff5a6a}#__odds.bust .bd{background:#d9283f}#__odds.bust b,#__odds.bust small{color:#fff}
+      #__odds.pop{transform:scale(1.08)}`;
+    document.head.appendChild(css);
+    box = document.createElement('div'); box.id = '__odds';
+    box.innerHTML = '<div class="pl">P1</div><div class="bd"><small>CHANCE HE MAKES YOU DRINK</small><b>4%</b></div>';
+    document.body.appendChild(box);
+  }
+  const players = plan.players || ['P1', 'P2', 'P3', 'P4'];
+  const show = (turn, txt, cls) => {
+    if (!box) return;
+    box.querySelector('.pl').textContent = players[(turn - 1) % players.length];
+    box.querySelector('b').textContent = txt; box.className = cls || '';
+    box.classList.add('pop'); setTimeout(() => box.classList.remove('pop'), 150);
+  };
+  show(1, oddsFor(1) + '%');
+  endTurn = function (p, landed) {
+    // forced cards are keyed by turn number ("3") or by time ("@9.5" = first turn that ends after 9.5s)
+    const turnNo = G.turn + 1, now = (performance.now() - (window.__rec0 ?? performance.now())) / 1000;
+    let card = forced[turnNo];
+    if (!card) for (const [k, v] of Object.entries(forced)) if (k[0] === '@' && now >= +k.slice(1) && !used.has(k)) { card = v; used.add(k); break; }
+    const R = Math.random;
+    if (safeAll) Math.random = () => (card ? 0 : 0.999999);   // the chance roll is endTurn's only random call
+    try { _end(p, landed); } finally { Math.random = R; }
+    if (card) { nextCard = card; show(turnNo, 'BUSTED', 'bust'); }
+    else setTimeout(() => { const k = G.sinceDrink + 1, o = oddsFor(k); show(turnNo + 1, o + '%', o >= 15 ? 'hot' : ''); }, 500);
+  };
+  punish = function (p, landed) {
+    if (!nextCard) return _pun(p, landed);
+    const D = LINES.drink; LINES.drink = D.map(() => nextCard); G.lastDrink = null;
+    try { _pun(p, landed); } finally { LINES.drink = D; nextCard = null; }
+  };
+  // after "Done. Next punch" the odds reset for the next player
+  document.getElementById('penDone').addEventListener('click', () => show(G.turn + 1, oddsFor(1) + '%'));
 }
 
 (async () => {
@@ -110,13 +172,17 @@ function choreo(rnd) {
   // let samples and clips decode (real time), then ring the bell in rage mode
   await page.waitForTimeout(2500);
   await page.evaluate(() => { const r = [...document.querySelectorAll('#moods button')].pop(); r && r.click(); });
+  if (PLAN && PLAN.mode === 'drink') await page.evaluate(() => document.querySelector('#modeSeg button[data-m="drink"]').click());
+  if (PLAN && (PLAN.punish || PLAN.odds)) await page.evaluate(installDrinkHooks, PLAN);
   // freeze the page clock: from here time only moves when we step it
-  await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 50);
-  await page.evaluate(() => { document.documentElement.style.setProperty('--st', '40px'); document.getElementById('hint').style.display = 'none'; window.__recW = performance.now(); document.getElementById('goBtn').click(); });
-  for (let i = 0; i < 20; i++) { await page.clock.runFor(STEP); await page.waitForTimeout(30); }   // clips load on real-time promises
+  await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 1500);
+  const onTitle = !!(PLAN && PLAN.startOnTitle);
+  if (onTitle) await page.evaluate(() => { everHit = true; });   // no "tap his face" nudge on the menu
+  await page.evaluate(go => { document.documentElement.style.setProperty('--st', '40px'); document.getElementById('hint').style.display = 'none'; window.__recW = performance.now(); if (go) document.getElementById('goBtn').click(); }, !onTitle);
+  if (!onTitle) for (let i = 0; i < 20; i++) { await page.clock.runFor(STEP); await page.waitForTimeout(30); }   // clips load on real-time promises
 
   let r = 0x9E3779B9 ^ SEED; const rnd = () => { r ^= r << 13; r ^= r >>> 17; r ^= r << 5; return ((r >>> 0) % 1e6) / 1e6; };
-  const acts = choreo(rnd);
+  const acts = PLAN && PLAN.actions ? PLAN.actions.map(a => ({ ...a })).sort((a, b) => a.t - b.t) : choreo(rnd);
   const toScr = ([x, y]) => page.evaluate(([x, y]) => toScreen(x, y), [x, y]);
   await page.evaluate(() => { window.__rec0 = window.__recW; });
   const warm = await page.evaluate(() => (performance.now() - window.__recW) / 1000);
@@ -126,6 +192,11 @@ function choreo(rnd) {
     const t = frame / FPS;
     while (acts.length && acts[0].t <= t && !active) {
       const a = acts.shift();
+      if (a.type === 'click') {   // a real finger tap on a button, so the touch dot shows
+        const box = await page.locator(a.sel).boundingBox();
+        if (box) { await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down(); await page.clock.runFor(60); await page.mouse.up(); }
+        continue;
+      }
       const [x0, y0] = await toScr(a.type === 'swipe' ? a.from : a.at);
       await page.mouse.move(x0, y0); await page.mouse.down();
       if (a.type === 'tap') { await page.clock.runFor(60); await page.mouse.up(); }

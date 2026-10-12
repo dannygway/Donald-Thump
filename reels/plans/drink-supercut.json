@@ -1,0 +1,64 @@
+{
+ "mode": "drink",
+ "actions": [
+  {
+   "t": 0.4,
+   "type": "tap",
+   "at": [
+    10,
+    0
+   ]
+  },
+  {
+   "t": 3.0,
+   "type": "click",
+   "sel": "#penDone"
+  },
+  {
+   "t": 3.4,
+   "type": "swipe",
+   "from": [
+    300,
+    10
+   ],
+   "to": [
+    -160,
+    0
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 6.0,
+   "type": "click",
+   "sel": "#penDone"
+  },
+  {
+   "t": 6.4,
+   "type": "tap",
+   "at": [
+    -30,
+    10
+   ]
+  },
+  {
+   "t": 9.0,
+   "type": "click",
+   "sel": "#penDone"
+  },
+  {
+   "t": 9.4,
+   "type": "hold",
+   "at": [
+    30,
+    0
+   ],
+   "dur": 0.9
+  }
+ ],
+ "punish": {
+  "1": "Steal a sip from somebody else's drink. They won't notice. Nobody notices.",
+  "2": "You and the last guy, drink. Both of those punches were sad. Very sad!",
+  "3": "Last one to say Donald Thump is the best has to drink! Go! GO!",
+  "4": "EVERYBODY DRINKS! The whole room! Tremendous!"
+ }
+}

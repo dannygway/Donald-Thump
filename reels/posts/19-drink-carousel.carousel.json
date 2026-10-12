@@ -1,0 +1,12 @@
+{
+  "cover": "Which one are you getting tonight?",
+  "cards": [
+    { "text": "Take a sip. A big, beautiful sip. Bigger. BIGGER!", "rarity": "common" },
+    { "text": "Steal a sip from somebody else's drink. They won't notice. Nobody notices.", "rarity": "common" },
+    { "text": "Last one to say Donald Thump is the best has to drink! Go! GO!", "rarity": "rare" },
+    { "text": "You and the last guy, drink. Both of those punches were sad. Very sad!", "rarity": "rare" },
+    { "text": "EVERYBODY DRINKS! The whole room! Tremendous!", "rarity": "legendary" }
+  ],
+  "cta": "Comment the number you got.",
+  "sub": "Free to start. 18+. Water counts."
+}

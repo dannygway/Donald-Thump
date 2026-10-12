@@ -1,0 +1,22 @@
+{
+  "hook": false,
+  "plan": "../plans/drink-odds.json",
+  "seed": 202,
+  "fightSecs": 17,
+  "fightCaptions": [
+    {
+      "text": "Every punch makes it riskier",
+      "from": 0,
+      "to": 2.6,
+      "top": 250
+    },
+    {
+      "text": "Somebody's drinking.",
+      "from": 13.2,
+      "to": 17,
+      "top": 250
+    }
+  ],
+  "endTitle": "Your round.",
+  "endSub": "Free to start. 18+. Water counts."
+}

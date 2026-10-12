@@ -1,0 +1,81 @@
+{
+ "mode": "drink",
+ "odds": true,
+ "actions": [
+  {
+   "t": 0.7,
+   "type": "tap",
+   "at": [
+    20,
+    -10
+   ]
+  },
+  {
+   "t": 2.5,
+   "type": "swipe",
+   "from": [
+    300,
+    10
+   ],
+   "to": [
+    -160,
+    0
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 4.3,
+   "type": "tap",
+   "at": [
+    -40,
+    30
+   ]
+  },
+  {
+   "t": 6.1,
+   "type": "swipe",
+   "from": [
+    0,
+    330
+   ],
+   "to": [
+    0,
+    0
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 7.9,
+   "type": "tap",
+   "at": [
+    60,
+    -30
+   ]
+  },
+  {
+   "t": 9.7,
+   "type": "swipe",
+   "from": [
+    -300,
+    0
+   ],
+   "to": [
+    160,
+    10
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 11.5,
+   "type": "hold",
+   "at": [
+    30,
+    0
+   ],
+   "dur": 1.1
+  }
+ ],
+ "punish": {
+  "@12.2": "EVERYBODY DRINKS! The whole room! Tremendous!"
+ }
+}

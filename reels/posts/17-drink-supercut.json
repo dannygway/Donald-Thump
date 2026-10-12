@@ -1,0 +1,16 @@
+{
+  "hook": false,
+  "plan": "../plans/drink-supercut.json",
+  "seed": 203,
+  "fightSecs": 14,
+  "fightCaptions": [
+    {
+      "text": "Things this app will make you do:",
+      "from": 0,
+      "to": 14,
+      "top": 250
+    }
+  ],
+  "endTitle": "Your round.",
+  "endSub": "Free to start. 18+. Water counts."
+}

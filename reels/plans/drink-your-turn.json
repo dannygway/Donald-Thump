@@ -1,0 +1,52 @@
+{
+ "mode": "drink",
+ "odds": true,
+ "players": [
+  "P1",
+  "P2",
+  "P3",
+  "YOU"
+ ],
+ "actions": [
+  {
+   "t": 0.6,
+   "type": "tap",
+   "at": [
+    20,
+    -10
+   ]
+  },
+  {
+   "t": 2.5,
+   "type": "swipe",
+   "from": [
+    300,
+    10
+   ],
+   "to": [
+    -160,
+    0
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 4.4,
+   "type": "tap",
+   "at": [
+    -40,
+    30
+   ]
+  },
+  {
+   "t": 7.0,
+   "type": "tap",
+   "at": [
+    30,
+    10
+   ]
+  }
+ ],
+ "punish": {
+  "@6.8": "Steal a sip from somebody else's drink. They won't notice. Nobody notices."
+ }
+}

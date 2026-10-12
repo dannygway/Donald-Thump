@@ -1,0 +1,87 @@
+{
+ "mode": "drink",
+ "odds": true,
+ "players": [
+  "P1",
+  "P2",
+  "P3",
+  "P4"
+ ],
+ "actions": [
+  {
+   "t": 0.6,
+   "type": "tap",
+   "at": [
+    20,
+    -10
+   ]
+  },
+  {
+   "t": 2.15,
+   "type": "swipe",
+   "from": [
+    300,
+    10
+   ],
+   "to": [
+    -160,
+    0
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 3.75,
+   "type": "tap",
+   "at": [
+    -40,
+    30
+   ]
+  },
+  {
+   "t": 5.3,
+   "type": "swipe",
+   "from": [
+    0,
+    330
+   ],
+   "to": [
+    0,
+    0
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 6.9,
+   "type": "tap",
+   "at": [
+    60,
+    -30
+   ]
+  },
+  {
+   "t": 8.45,
+   "type": "swipe",
+   "from": [
+    -300,
+    0
+   ],
+   "to": [
+    160,
+    10
+   ],
+   "dur": 0.12
+  },
+  {
+   "t": 10.05,
+   "type": "hold",
+   "at": [
+    30,
+    0
+   ],
+   "dur": 1.1
+  }
+ ],
+ "punish": {
+  "7": "EVERYBODY DRINKS! The whole room! Tremendous!"
+ }
+}

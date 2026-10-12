@@ -13,7 +13,11 @@
 //     "appCaption": "Me:",             // optional line over the first 2s of the fight
 //     "seed": 7, "fightSecs": 7,       // seed changes the fight; same seed = same fight
 //     "endTitle": "Your turn.", "endSub": "Free in your browser. Link in bio.",
-//     "endVoice": "quit_01.mp3"        // optional voice/ clip over the end card ("" for none)
+//     "endVoice": "quit_01.mp3",       // optional voice/ clip over the end card ("" for none)
+//     "hook": false,                   // skip the clip segment and open straight on the app
+//     "plan": "../plans/odds.json",    // scripted recording (drinking game, forced cards, odds graphic); see record-app.cjs
+//     "fightCaptions": [ { "text": "1. Punch him once", "from": 0.5, "to": 2.5, "top": 445, "small": true } ],
+//     "endCard": false                 // finish on the app's last frame instead of the end card
 //   }
 // Output lands next to the post: <name>/reel.mp4 and <name>/cover.jpg.
 // Needs ffmpeg, and the app served locally (it starts `python3 -m http.server` on :8779 if nothing is there).
@@ -47,17 +51,24 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
 
   // 1. overlays
   // cropped clips usually have his head at the top, so the caption goes over his chest instead
-  const spec = { caption: post.caption || '', captionTop: post.captionTop ?? ((post.layout || 'fit') === 'cover' ? 1150 : 330), appCaption: post.appCaption, endTitle: post.endTitle, endSub: post.endSub };
+  const fcaps = (post.fightCaptions || []).map((c, i) => ({ ...c, file: `fcap-${i}.png` }));
+  const spec = { caption: post.caption || '', captionTop: post.captionTop ?? ((post.layout || 'fit') === 'cover' ? 1150 : 330), appCaption: post.appCaption,
+    extra: fcaps, endTitle: post.endTitle, endSub: post.endSub };
   fs.writeFileSync(path.join(WORK, 'spec.json'), JSON.stringify(spec));
   node('render-cards.cjs', [path.join(WORK, 'spec.json'), WORK]);
 
   // 2. the fight
   const secs = post.fightSecs || 7, seed = post.seed ?? Math.floor(Math.random() * 1e6);
-  const rec = path.join(WORK, `fight-${seed}-${secs}`);
-  if (!fs.existsSync(path.join(rec, 'audio.json'))) node('record-app.cjs', [rec, '--seed', String(seed), '--secs', String(secs)]);
+  const plan = post.plan ? path.resolve(dir, post.plan) : null;
+  const planTag = plan ? '-' + require('crypto').createHash('md5').update(fs.readFileSync(plan)).digest('hex').slice(0, 8) : '';
+  const rec = path.join(WORK, `fight-${seed}-${secs}${planTag}`);
+  if (!fs.existsSync(path.join(rec, 'audio.json'))) node('record-app.cjs', [rec, '--seed', String(seed), '--secs', String(secs), ...(plan ? ['--plan', plan] : [])]);
   if (server) server.kill();
 
   // 3. hook segment
+  const bell = path.join(ROOT, 'sfx/bell_01.mp3');
+  const segs = [];
+  if (post.hook !== false) {
   let clip = post.clip ? path.resolve(dir, post.clip) : null, cin = post.in || 0, cout = post.out;
   if (!clip) {   // placeholder slate so the format can be previewed before a real clip is picked
     clip = path.join(WORK, 'placeholder.mp4');
@@ -75,7 +86,6 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
     : `[0:v]trim=${cin}:${cout},setpts=PTS-STARTPTS,fps=${FPS},split[a][b];` +
       `[a]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},boxblur=40:2,eq=brightness=-0.22:saturation=0.8[bg];` +
       `[b]scale=${W}:-2,setsar=1[fg];[bg][fg]overlay=0:(H-h)/2+90,setsar=1[base]`;
-  const bell = path.join(ROOT, 'sfx/bell_01.mp3');
   const clipAud = hasAudio(clip) ? `[0:a]atrim=${cin}:${cout},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=out:st=${Math.max(0, D - 0.12)}:d=0.12,apad=whole_dur=${HD}[ca]`
     : `anullsrc=r=48000:cl=stereo,atrim=0:${HD}[ca]`;
   ff(['-i', clip, '-loop', '1', '-t', String(HD), '-i', path.join(WORK, 'caption.png'), '-i', bell, '-filter_complex',
@@ -86,6 +96,8 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
     `${clipAud};[2:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.9,adelay=${Math.round(D * 1000)}:all=1[bl];` +
     `[ca][bl]amix=inputs=2:normalize=0:duration=first,atrim=0:${HD}[a]`,
     '-map', '[v]', '-map', '[a]', '-t', String(HD), ...ENC, path.join(WORK, 'seg1.mp4')], 'hook');
+  segs.push('seg1');
+  }
 
   // 4. fight segment, soundtrack rebuilt from the app's own samples
   const ev = JSON.parse(fs.readFileSync(path.join(rec, 'audio.json'), 'utf8')).events.filter(e => e.t < secs);
@@ -98,15 +110,24 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
       `,volume=${(e.gain || 1).toFixed(3)},adelay=${Math.max(0, Math.round(e.t * 1000))}:all=1[e${i}]`);
   });
   const mix = ev.length ? `${parts.join(';')};${ev.map((_, i) => `[e${i}]`).join('')}amix=inputs=${ev.length}:normalize=0:duration=longest,` : 'anullsrc=r=48000:cl=stereo,';
-  const appCap = post.appCaption ? ['-loop', '1', '-t', String(secs), '-i', path.join(WORK, 'app-caption.png')] : [];
-  const capIdx = ev.length + 1;
-  const vf = `[0:v]fps=${FPS},scale=${W}:${H},setsar=1,fade=in:st=0:d=0.12:color=white` +
-    (post.appCaption ? `[f];[${capIdx}:v]format=rgba,fade=out:st=1.8:d=0.25:alpha=1[ac];[f][ac]overlay=0:0:shortest=1` : '') + '[v]';
+  // timed captions over the fight (appCaption is shorthand for one over the first 2s)
+  const timed = [...(post.appCaption ? [{ file: 'app-caption.png', from: 0, to: 2.05 }] : []), ...fcaps];
+  const capIns = timed.flatMap(c => ['-loop', '1', '-t', String(secs), '-i', path.join(WORK, c.file)]);
+  let vf = `[0:v]fps=${FPS},scale=${W}:${H},setsar=1` + (post.hook !== false ? ',fade=in:st=0:d=0.12:color=white' : '') + '[f0]';
+  timed.forEach((c, i) => {
+    const to = Math.min(c.to ?? secs, secs), from = c.from || 0;
+    vf += `;[${ev.length + 1 + i}:v]format=rgba` + (from > 0 ? `,fade=in:st=${from}:d=0.15:alpha=1` : '') + (to < secs ? `,fade=out:st=${Math.max(from, to - 0.2)}:d=0.2:alpha=1` : '') +
+      `[c${i}];[f${i}][c${i}]overlay=0:0:shortest=1[f${i + 1}]`;
+  });
+  vf += `;[f${timed.length}]null[v]`;
+  const appCap = capIns;
   ff(['-framerate', String(FPS), '-i', path.join(rec, 'frames/%05d.jpg'), ...ins, ...appCap, '-filter_complex',
     `${vf};${mix}apad=whole_dur=${secs},atrim=0:${secs},alimiter=limit=0.9[a]`,
     '-map', '[v]', '-map', '[a]', '-t', String(secs), ...ENC, path.join(WORK, 'seg2.mp4')], 'fight');
+  segs.push('seg2');
 
   // 5. end card over his last frame, blurred
+  if (post.endCard !== false) {
   const frames = fs.readdirSync(path.join(rec, 'frames')).sort();
   const last = path.join(rec, 'frames', frames[frames.length - 1]);
   const endVoice = post.endVoice === '' ? null : path.join(ROOT, 'voice', post.endVoice || 'quit_01.mp3');
@@ -117,14 +138,16 @@ const up = () => new Promise(res => http.get('http://localhost:8779/index.html',
     (endVoice ? `[3:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=1.1,adelay=650:all=1[vo];[b1][b2d][vo]amix=inputs=3` : `[b1][b2d]amix=inputs=2`) +
     `:normalize=0:duration=longest,apad=whole_dur=${END},atrim=0:${END},afade=t=out:st=${END - 0.3}:d=0.3[a]`,
     '-map', '[v]', '-map', '[a]', '-t', String(END), ...ENC, path.join(WORK, 'seg3.mp4')], 'end card');
+  segs.push('seg3');
+  }
 
   // 6. stitch, then bring the whole thing to Instagram loudness (-14 LUFS)
-  fs.writeFileSync(path.join(WORK, 'list.txt'), ['seg1', 'seg2', 'seg3'].map(s => `file '${s}.mp4'`).join('\n'));
+  fs.writeFileSync(path.join(WORK, 'list.txt'), segs.map(s => `file '${s}.mp4'`).join('\n'));
   ff(['-f', 'concat', '-safe', '0', '-i', path.join(WORK, 'list.txt'), '-c', 'copy', path.join(WORK, 'joined.mp4')], 'concat');
   const final = path.join(OUT, 'reel.mp4');
   const r = cp.spawnSync('ffmpeg', ['-nostdin', '-v', 'error', '-y', '-i', path.join(WORK, 'joined.mp4'), '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', final], { timeout: 180000 });
   if (r.status !== 0) ff(['-i', path.join(WORK, 'joined.mp4'), '-c', 'copy', '-movflags', '+faststart', final], 'copy');
   // cover: the hook frame with the caption on it
-  ff(['-ss', String(Math.min(1, D / 2)), '-i', path.join(WORK, 'seg1.mp4'), '-frames:v', '1', '-q:v', '2', path.join(OUT, 'cover.jpg')], 'cover');
+  ff(['-ss', segs[0] === 'seg1' ? '1' : '0.5', '-i', path.join(WORK, segs[0] + '.mp4'), '-frames:v', '1', '-q:v', '2', path.join(OUT, 'cover.jpg')], 'cover');
   console.log(`\n✔ ${path.relative(ROOT, final)}  (${probeDur(final).toFixed(1)}s, seed ${seed})`);
 })();

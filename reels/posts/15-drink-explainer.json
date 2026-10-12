@@ -1,0 +1,34 @@
+{
+  "hook": false,
+  "plan": "../plans/drink-explainer.json",
+  "seed": 201,
+  "fightSecs": 12,
+  "fightCaptions": [
+    {
+      "text": "New pub game:",
+      "from": 0,
+      "to": 1.6,
+      "top": 330
+    },
+    {
+      "text": "1. Punch him once",
+      "from": 2.4,
+      "to": 4.4,
+      "top": 330
+    },
+    {
+      "text": "2. Pass the phone",
+      "from": 4.4,
+      "to": 6.6,
+      "top": 330
+    },
+    {
+      "text": "3. He decides who drinks",
+      "from": 7.4,
+      "to": 12,
+      "top": 250
+    }
+  ],
+  "endTitle": "Your round.",
+  "endSub": "Free to start. 18+. Water counts."
+}
